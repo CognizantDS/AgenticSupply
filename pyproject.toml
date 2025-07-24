@@ -20,6 +20,7 @@ dependencies = [
     "dowhy==0.13",
     "faiss-cpu==1.11.0.post1",
     "neuro-san==0.5.47",
+    "plotly==5.22.0",
     "python-dotenv==1.0.1",
     "openai==1.97.1",
     "sentence-transformers==5.0.0",
@@ -29,7 +30,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "azure-ai-ml==1.28.1",
-  "pip-system-certs==5.2"
+  "pip-system-certs==5.2" # to solve ssl certificate issues in Python 3.6+
 ]
 
 [tool.ruff]
