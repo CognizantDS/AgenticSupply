@@ -18,12 +18,18 @@ classifiers = [
 license = { text = "MIT" }
 dependencies = [
     "dowhy==0.13",
+    "faiss-cpu==1.11.0.post1",
     "neuro-san==0.5.47",
+    "python-dotenv==1.0.1",
+    "openai==1.97.1",
+    "sentence-transformers==5.0.0",
+    "vanna==0.7.9"
 ]
 
 [project.optional-dependencies]
 dev = [
   "azure-ai-ml==1.28.1",
+  "pip-system-certs==5.2"
 ]
 
 [tool.ruff]
