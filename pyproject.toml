@@ -17,12 +17,14 @@ classifiers = [
 ]
 license = { text = "MIT" }
 dependencies = [
+    "cdt==0.6.0",
     "dowhy==0.13",
     "faiss-cpu==1.11.0.post1",
     "neuro-san==0.5.47",
     "plotly==5.22.0",
     "python-dotenv==1.0.1",
     "openai==1.97.1",
+    "seaborn==0.13.2",
     "sentence-transformers==5.0.0",
     "vanna==0.7.9"
 ]
