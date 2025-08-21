@@ -1,0 +1,64 @@
+{
+    # Optional metadata describing this agent network
+    "metadata": {
+        "description": "Simple agent network using a CodedTool and sly_data"
+        "tags": ["example"],
+    },
+    "llm_config": {
+        "model_name": "azure-gpt-4o", # "azure-gpt-4.1",
+        "openai_api_version": "2025-01-01-preview",# "2024-12-01-preview",
+        "azure_endpoint": "https://belfiusoai1.openai.azure.com/",
+        "deployment_name": "gpt-4o"
+    },
+    "tools": [
+        # This first agent definition is regarded as the "Front Man", which
+        # does all the talking to the outside world/client.
+        #
+        # Some disqualifications from being a front man:
+        #   1) Cannot use a CodedTool "class" definition
+        #   2) Cannot use a Tool "toolbox" definition
+        #
+        # Besides the first agent being the front man, these tool definitions
+        # do not have to be in any particular order. How they are linked and
+        # call each other is defined within their own specs.
+        # This could be a graph, potentially even with cycles.
+        {
+            "name": "supply_chain_explorer",
+            "function": {
+
+                # The description acts as an initial prompt.
+                "description": """
+I am an agent network that can create causal graphs.
+Prompt me to create a causal graph and I will print the graph in the chat.
+""",
+            },
+
+            "instructions": """
+Always call the graph_generator tool to populate the return sly_data correctly.
+Return verbatim whatever it returns.
+""",
+            "allow": {
+                "from_downstream": {
+                    # Specifying this allows sly_data keys to be ingested from downstream agents
+                    # as sly_data for this agent network
+                    "sly_data": ["equals"]
+                },
+                "to_upstream": {
+                    # Specifying this allows sly_data keys from this network to be passed back
+                    # to the calling client
+                    "sly_data": ["equals"]
+                }
+            },
+
+            "tools": ["graph_generator"]
+        },
+
+        {
+            "name": "graph_generator",
+            "function": {
+                "description": "Generates a causal graph for the supply chain data.",
+            },
+            "class": "graph_generator.GraphGenerator"
+        }
+    ]
+}
