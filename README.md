@@ -23,7 +23,13 @@ OPENAI_API_KEY=""
 ```
 
 ## Setting up Neuro-SAN-studio
-Clone ``https://github.com/cognizant-ai-lab/neuro-san-studio`` as a separate directory.
+Clone ``https://github.com/cognizant-ai-lab/neuro-san-studio`` as a separate directory.  
+Comment out the reference to ``neuro-san`` in the requirements.txt : this is to ensure that we install it from git as a dependency of ``agentic_supply`` :
+```
+# Neuro SAN
+# neuro-san==0.5.55 # install via AgenticSupply
+``` 
+
 In the ``neuro-san-studio`` directory, create and activate the venv, and install this package (-e for editable option) and the additional requirements :
 ```
 python -m venv .venv
