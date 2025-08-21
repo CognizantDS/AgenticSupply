@@ -1,5 +1,7 @@
 from typing import Any, Dict
 from neuro_san.interfaces.coded_tool import CodedTool
+import webbrowser
+import os
 
 from agentic_supply.causality_assistant.causal_graph_generation import generate_causal_graph
 
@@ -37,7 +39,9 @@ class GraphGenerator(CodedTool):
         :return: A return value that goes into the chat stream.
         """
 
-        causal_graph, markdown_command = generate_causal_graph()
+        causal_graph, image_filepath_html = generate_causal_graph()
         sly_data["causal_graph"] = causal_graph
 
-        return markdown_command
+        webbrowser.open_new_tab(f"file://{os.path.abspath(image_filepath_html)}")
+
+        return "See the causal graph in the newly opened tab"

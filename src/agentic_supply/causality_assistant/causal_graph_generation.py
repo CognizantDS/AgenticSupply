@@ -5,9 +5,11 @@ References :
     https://github.com/cognizant-ai-lab/neuro-san/blob/main/docs/agent_hocon_reference.md#class
 """
 
+import os
 import networkx as nx
 import matplotlib.pyplot as plt
 import uuid
+import base64
 
 
 def generate_causal_graph() -> nx.DiGraph:
@@ -29,9 +31,28 @@ def generate_causal_graph() -> nx.DiGraph:
             ("Molecule/Test Type", "Unit Price"),
         ]
     )
-    image_path = f"logs/causal_graph_{uuid.uuid4().hex}.png"
+    image_dir = "./logs"
+    image_basename = f"causal_graph_{uuid.uuid4().hex}"
+    image_filepath_png, image_filepath_html = (os.path.join(image_dir, image_basename + extension) for extension in [".png", ".html"])
     nx.draw_networkx(causal_graph)
-    plt.savefig(image_path)
-    markdown_command = f"![Causal graph image]({image_path})"
+    plt.savefig(image_filepath_png)
 
-    return (causal_graph, markdown_command)
+    with open(image_filepath_png, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode("utf-8")
+    # encoded_string = f"data:image/png;base64,{encoded}"
+    # encoded_html = f"<img src='data:image/png;base64,{encoded}' alt='Causal graph image' />"
+    # markdown_command = f"![Causal graph image](http://localhost:8765/{image_filepath_png})"
+
+    encoded_html = f"""
+    <html>
+    <body>
+        <h2>Causal Graph</h2>
+        <img src='data:image/png;base64,{encoded}' alt='Causal graph image' />
+    </body>
+    </html>
+    """
+
+    with open(image_filepath_html, "w") as f:
+        f.write(encoded_html)
+
+    return (causal_graph, image_filepath_html)

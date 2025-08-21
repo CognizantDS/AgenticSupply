@@ -35,7 +35,7 @@ Prompt me to create a causal graph and I will print the graph in the chat.
 
             "instructions": """
 Always call the graph_generator tool to populate the return sly_data correctly.
-Return verbatim whatever it returns.
+Return only the message that it returns.
 """,
             "allow": {
                 "from_downstream": {
