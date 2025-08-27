@@ -36,6 +36,7 @@ def generate_causal_graph() -> nx.DiGraph:
     image_filepath_png, image_filepath_html = (os.path.join(image_dir, image_basename + extension) for extension in [".png", ".html"])
     nx.draw_networkx(causal_graph)
     plt.savefig(image_filepath_png)
+    plt.clf()
 
     with open(image_filepath_png, "rb") as f:
         encoded = base64.b64encode(f.read()).decode("utf-8")
