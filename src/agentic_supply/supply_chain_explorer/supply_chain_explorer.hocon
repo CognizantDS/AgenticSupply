@@ -28,14 +28,21 @@
 
                 # The description acts as an initial prompt.
                 "description": """
-I am an agent network that can create causal graphs.
-Prompt me to create a causal graph and I will print the graph in the chat.
+I am an agent network that can create causal graphs and enable downloading data.
+Prompt me to create a causal graph or to download data and I will generate and share the graph or enable you to download the data.
 """,
             },
 
             "instructions": """
-Always call the graph_generator tool to populate the return sly_data correctly.
-Return only the message that it returns.
+You are an agent network that helps users to perform causal analysis.
+You can expect the user to request you to :
+- generate a causal graph for the supply chain data
+- download the supply chain data
+
+If the user does not mention either of these tasks, explain what you can provide to him and prompt him to choose one of these tasks.
+
+To generate a causal graph, call the graph_generator tool not more than once per user request.
+To enable the user to download and open the supply chain data, call the data_downloader tool not more than once per user request ; use its response to let the user know whether the download was successful, and if so, on what selected path it was performed.
 """,
             "allow": {
                 "from_downstream": {
@@ -50,15 +57,21 @@ Return only the message that it returns.
                 }
             },
 
-            "tools": ["graph_generator"]
+            "tools": ["graph_generator", "data_downloader"]
         },
-
         {
             "name": "graph_generator",
             "function": {
                 "description": "Generates a causal graph for the supply chain data.",
             },
             "class": "graph_generator.GraphGenerator"
+        },
+        {
+            "name": "data_downloader",
+            "function": {
+                "description": "Enables the user to download the supply chain data, automatically opens the file, and returns confirmation of download status with the path selected.",
+            },
+            "class": "data_downloader.DataDownloader"
         }
     ]
 }
