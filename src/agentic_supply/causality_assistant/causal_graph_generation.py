@@ -10,27 +10,33 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import uuid
 import base64
+from typing import Dict, List, Tuple
+
+from agentic_supply.utilities.config import DATA_NAMES
+
+DATA_TO_GRAPH_FORM: Dict[DATA_NAMES, List[Tuple]] = {
+    "supply_chain_medical": [
+        ("Country", "Managed By"),
+        ("Managed By", "Fulfill Via"),
+        ("Managed By", "Shipment Mode"),
+        ("Fulfill Via", "Shipment Mode"),
+        ("Country", "Shipment Mode"),
+        ("Country", "Product Group"),
+        ("Brand", "Product Group"),
+        ("Product Group", "Sub Classification"),
+        ("Sub Classification", "Molecule/Test Type"),
+        # Price
+        ("Shipment Mode", "Freight Cost (USD)"),
+        ("Freight Cost (USD)", "Unit Price"),
+        ("Sub Classification", "Unit Price"),
+        ("Molecule/Test Type", "Unit Price"),
+    ],
+    "supply_chain_logistics": [("demand", "submitted"), ("constraint", "submitted"), ("submitted", "confirmed"), ("confirmed", "received")],
+}
 
 
-def generate_causal_graph() -> nx.DiGraph:
-    causal_graph = nx.DiGraph(
-        [
-            ("Country", "Managed By"),
-            ("Managed By", "Fulfill Via"),
-            ("Managed By", "Shipment Mode"),
-            ("Fulfill Via", "Shipment Mode"),
-            ("Country", "Shipment Mode"),
-            ("Country", "Product Group"),
-            ("Brand", "Product Group"),
-            ("Product Group", "Sub Classification"),
-            ("Sub Classification", "Molecule/Test Type"),
-            # Price
-            ("Shipment Mode", "Freight Cost (USD)"),
-            ("Freight Cost (USD)", "Unit Price"),
-            ("Sub Classification", "Unit Price"),
-            ("Molecule/Test Type", "Unit Price"),
-        ]
-    )
+def generate_causal_graph(data_name: DATA_NAMES) -> nx.DiGraph:
+    causal_graph = nx.DiGraph(DATA_TO_GRAPH_FORM[data_name])
     image_dir = "./logs"
     image_basename = f"causal_graph_{uuid.uuid4().hex}"
     image_filepath_png, image_filepath_html = (os.path.join(image_dir, image_basename + extension) for extension in [".png", ".html"])
@@ -47,8 +53,8 @@ def generate_causal_graph() -> nx.DiGraph:
     encoded_html = f"""
     <html>
     <body>
-        <h2>Causal Graph</h2>
-        <img src='data:image/png;base64,{encoded}' alt='Causal graph image' />
+        <h2>Causal Graph for {data_name}</h2>
+        <img src='data:image/png;base64,{encoded}' alt='Causal graph image for {data_name}' />
     </body>
     </html>
     """

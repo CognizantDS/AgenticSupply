@@ -7,20 +7,29 @@ import tkinter as tk
 from tkinter import filedialog
 import shutil
 from importlib.resources import files, as_file
+from typing import Dict, List, Tuple
 
 from agentic_supply.utilities.log_utils import set_logging, get_logger
+from agentic_supply.utilities.config import DATA_NAMES
 from agentic_supply import data
 
 set_logging()
 logger = get_logger(__name__)
 
+DATA_TO_FILE: Dict[DATA_NAMES, List[Tuple]] = {
+    "supply_chain_medical": "SCMS_Delivery_History_Dataset.csv",
+    "supply_chain_logistics": "supply_chain_week_over_week.csv",
+}
 
-def download_data(data_name: str = "SCMS_Delivery_History_Dataset.csv", open_file: bool = True) -> str:
+
+def download_data(data_name: DATA_NAMES, open_file: bool = True) -> str:
     source = files(data).joinpath(data_name)
     with as_file(source) as myfile:
         root = tk.Tk()
         root.withdraw()
-        target_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")], title="Save CSV File As")
+        target_path = filedialog.asksaveasfilename(
+            defaultextension=".csv", filetypes=[("CSV files", "*.csv")], title=f"Save {data_name} As"
+        )
         target_path = os.path.abspath(target_path)
 
         if target_path:

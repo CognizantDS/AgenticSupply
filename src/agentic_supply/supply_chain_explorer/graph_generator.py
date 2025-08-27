@@ -4,6 +4,7 @@ import webbrowser
 import os
 
 from agentic_supply.causality_assistant.causal_graph_generation import generate_causal_graph
+from agentic_supply.utilities.config import DATA_NAMES
 
 
 class GraphGenerator(CodedTool):
@@ -39,7 +40,8 @@ class GraphGenerator(CodedTool):
         :return: A return value that goes into the chat stream.
         """
 
-        causal_graph, image_filepath_html = generate_causal_graph()
+        data_name: DATA_NAMES = args.get("data_name")
+        causal_graph, image_filepath_html = generate_causal_graph(data_name)
         sly_data["causal_graph"] = causal_graph
 
         webbrowser.open_new_tab(f"file://{os.path.abspath(image_filepath_html)}")

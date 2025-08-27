@@ -25,3 +25,6 @@ AZURE_AI_NAME_DEEPSEEK = os.getenv("AZURE_AI_NAME_DEEPSEEK")
 
 # vanna ai
 VANNA_API_KEY = os.getenv("VANNA_API_KEY")
+
+# constants
+DATA_NAMES = Literal["supply_chain_medical", "supply_chain_logistics"]

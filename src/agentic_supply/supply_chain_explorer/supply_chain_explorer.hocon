@@ -28,21 +28,28 @@
 
                 # The description acts as an initial prompt.
                 "description": """
-I am an agent network that can create causal graphs and enable downloading data.
-Prompt me to create a causal graph or to download data and I will generate and share the graph or enable you to download the data.
+I am an agent network that can create causal graphs and enable downloading data from a range of datasets.
+Choose your dataset of interest, and prompt me to create a causal graph or to download data and I will generate and share the graph or enable you to download the data.
 """,
             },
 
             "instructions": """
 You are an agent network that helps users to perform causal analysis.
-You can expect the user to request you to :
-- generate a causal graph for the supply chain data
-- download the supply chain data
+You have access to two dataset :
+- supply_chain_medical
+- supply_chain_logistics
+
+You must prompt the user to tell you the dataset they wish to select for the duration of the whole chat.
+
+Once selected, you can expect the user to request you to :
+- generate a causal graph for the data they selected
+- download for the data they selected
 
 If the user does not mention either of these tasks, explain what you can provide to him and prompt him to choose one of these tasks.
 
 To generate a causal graph, call the graph_generator tool not more than once per user request.
 To enable the user to download and open the supply chain data, call the data_downloader tool not more than once per user request ; use its response to let the user know whether the download was successful, and if so, on what selected path it was performed.
+All tools include a 'data_name' argument, which refers to the data selected by the user and which must always be passed to the tool Literal['supply_chain_medical', 'supply_chain_logistics']
 """,
             "allow": {
                 "from_downstream": {
@@ -63,6 +70,16 @@ To enable the user to download and open the supply chain data, call the data_dow
             "name": "graph_generator",
             "function": {
                 "description": "Generates a causal graph for the supply chain data.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "data_name": {
+                            "type": "string",
+                            "description": "The name of the data for which to generate the graph."
+                        }
+                    },
+                    "required": ["data_name"]
+                }
             },
             "class": "graph_generator.GraphGenerator"
         },
@@ -70,6 +87,16 @@ To enable the user to download and open the supply chain data, call the data_dow
             "name": "data_downloader",
             "function": {
                 "description": "Enables the user to download the supply chain data, automatically opens the file, and returns confirmation of download status with the path selected.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "data_name": {
+                            "type": "string",
+                            "description": "The name of the data to download."
+                        }
+                    },
+                    "required": ["data_name"]
+                }
             },
             "class": "data_downloader.DataDownloader"
         }
