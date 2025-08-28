@@ -12,5 +12,6 @@
     # Currently we list each hocon file we want to serve as a key with a boolean value.
     # Eventually we might have a dictionary value with server specifications for each.
     "supply_chain_explorer.hocon": true,
+    "agentic_logistics.hocon": true,
     
 }

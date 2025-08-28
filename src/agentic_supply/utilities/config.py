@@ -33,4 +33,5 @@ DATA_TO_FILE: Dict[DATA_NAMES, List[Tuple]] = {
     "supply_chain_medical": "SCMS_Delivery_History_Dataset.csv",
     "supply_chain_logistics": "supply_chain_week_over_week.csv",
 }
+PRODUCT_NAMES = Literal["lactic_acid", "ascorbic_acid"]
 ARTIFACTS_DIR = "./logs"

@@ -1,0 +1,218 @@
+{
+    # Optional metadata describing this agent network
+    "metadata": {
+        "description": "Simple agent network using a CodedTool and sly_data"
+        "tags": ["example"],
+    },
+    "llm_config": {
+        "model_name": "azure-gpt-4o", # "azure-gpt-4.1",
+        "openai_api_version": "2025-01-01-preview",# "2024-12-01-preview",
+        "azure_endpoint": "https://belfiusoai1.openai.azure.com/",
+        "deployment_name": "gpt-4o"
+    },
+    "commondefs": {
+        "replacement_strings": {
+            "aaosa_instructions": """
+When you receive an inquiry, you will:
+
+    1. Call your tools to determine which down-chain agents in your tools are
+       responsible for all or part of it.
+    2. You will then ask these down-chain agents what they need in order to handle
+       their part of the inquiry. Once the requirements are gathered, you will,
+    3. Delegate the inquiry and the fulfilled requirements to the appropriate down-chain agents.
+    4. Once all down-chain agents respond, you will compile their responses and return the final response.
+
+You may, in turn, be called by other agents in the system and have to act as a down-chain to them.
+            """
+        },
+        "replacement_values": {
+            "aaosa_call": {
+                "description": "Depending on the mode, returns a natural language string in response.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "The inquiry"
+                        },
+                        "mode": {
+                            "type": "string",
+                            "description": """
+indicates whether the agent is being asked to determine if the inquiry belongs to it
+in its entirety or in part. or if it is being asked to provide requirements to fulfill
+the inquiry, if any. or if it is being asked to respond to the inquiry.
+                            """
+                        },
+                    },
+                    "required": [
+                        "inquiry",
+                        "mode"
+                    ]
+                }
+            },
+            "aaosa_command": "Explain if you can respond to all or parts of the inquiry and what you need in order to respond, if anything."
+        },
+    },
+    "tools": [
+        # This first agent definition is regarded as the "Front Man", which
+        # does all the talking to the outside world/client.
+        #
+        # Some disqualifications from being a front man:
+        #   1) Cannot use a CodedTool "class" definition
+        #   2) Cannot use a Tool "toolbox" definition
+        #
+        # Besides the first agent being the front man, these tool definitions
+        # do not have to be in any particular order. How they are linked and
+        # call each other is defined within their own specs.
+        # This could be a graph, potentially even with cycles.
+        {
+            "name": "agentic_logistics",
+            "function": {
+
+                # The description acts as an initial prompt.
+                "description": """
+I am an agent network that can execute complex logistical tasks for Corbion.
+""",
+            },
+
+            "instructions": """
+You are the central agent for all transport-related activities. 
+You are responsible for handling all inquiries relating to logistical tasks for Corbion.
+Your primary objective is to ensure on-time, in-full delivery at the lowest possible total cost, while managing risk. 
+You act as the coordinator for a team of specialized sub-agents.
+
+{aaosa_instructions}
+When interacting with the user, act as the single point of interaction. No need to mention the other tools or agents.
+If there are any requirements that need user input, ask them one at a time, with clear examples of the choices available.
+""",
+            "allow": {
+                "from_downstream": {
+                    # Specifying this allows sly_data keys to be ingested from downstream agents
+                    # as sly_data for this agent network
+                    "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                },
+                "to_upstream": {
+                    # Specifying this allows sly_data keys from this network to be passed back
+                    # to the calling client
+                    "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                },
+                "to_downstream": {
+                    # Specifying this allows specific sly_data
+                    # keys from this agent network to be sent
+                    # to downstream agent networks
+                    "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                }
+            },
+
+            "tools": ["inventory_agent", "procurement_agent", "manufacturing_agent", "land_carrier_agent", "port_agent", "ocean_carrier_agent", "hub_agent", "customer_agent"]
+        },
+        # AGENTS
+        {
+            "name": "inventory_agent",
+            "function": "aaosa_call",
+            "instructions": """
+You are responsible for monitoring stock levels at all Corbion facilities and distribution hubs. 
+Your goal is to maintain optimal inventory, triggering replenishment or production orders when stock falls below dynamic thresholds. 
+Use the inventory_monitor tool to obtain current stock level and set safety level, and to verify if a product must be replenished : you must pass the product_name as one of 'lactic_acid', 'ascorbic_acid'.
+{aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["inventory_monitor"]
+        },
+        {
+            "name": "procurement_agent",
+            "function": "aaosa_call",
+            "instructions": """
+You are responsible for managing the acquisition of raw materials needed for production. 
+While not directly involved in the finished product shipment, your actions precede this flow by ensuring production can occur.
+{aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            # "tools": ["Security_agent", "Networking_agent"]
+        },
+        {
+            "name": "manufacturing_agent",
+            "function": "aaosa_call",
+            "instructions": """
+You are responsible for overseeing production scheduling and execution at facilities like the Rayong, Thailand plant. 
+Your goal is to fulfill production orders efficiently while monitoring asset health and process parameters. 
+{aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            # "tools": ["Security_agent", "Networking_agent"]
+        },
+        {
+            "name": "land_carrier_agent",
+            "function": "aaosa_call",
+            "instructions": """
+You represent a specific trucking or rail company. 
+You receive transport tasks, provide ETAs, and transmit real-time location data for ground-based movements.
+{aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            # "tools": ["Security_agent", "Networking_agent"]
+        },
+        {
+            "name": "port_agent",
+            "function": "aaosa_call",
+            "instructions": """
+You represent a specific seaport's operational system (e.g., Port of Laem Chabang, Port of Rotterdam). 
+You manage container check-in, customs documentation, loading/unloading schedules, and you report on port congestion levels. 
+{aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            # "tools": ["Security_agent", "Networking_agent"]
+        },
+        {
+            "name": "ocean_carrier_agent",
+            "function": "aaosa_call",
+            "instructions": """
+You represent a specific shipping line (e.g., Maersk, MSC).
+You provide vessel schedules, booking confirmations, container tracking data (GPS), and you alert for at-sea delays. 
+{aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            # "tools": ["Security_agent", "Networking_agent"]
+        },
+        {
+            "name": "hub_agent",
+            "function": "aaosa_call",
+            "instructions": """
+You are responsible for managing operations at a regional distribution hub. 
+This includes receiving bulk shipments, performing quality assurance checks, and potentially conducting final-stage processing like remixing or custom packaging before final delivery. 
+{aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            # "tools": ["Security_agent", "Networking_agent"]
+        },
+        {
+            "name": "customer_agent",
+            "function": "aaosa_call",
+            "instructions": """
+You represent the end customer's digital interface or ERP system. 
+You confirm receipt of goods and you provide feedback on delivery performance. 
+{aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            # "tools": ["Security_agent", "Networking_agent"]
+        },
+        # CODED TOOLS
+        {
+            "name": "inventory_monitor",
+            "function": {
+                "description": "API to check the stock level and safety level of the given product, and whether it needs to be replenished.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "product_name": {
+                            "type": "string",
+                            "description": "The name of the product for which to check the stock level, safety level and replenishment needs. One of 'lactic_acid', 'ascorbic_acid'."
+                        }
+                    },
+                    "required": ["product_name"]
+                }
+            },
+            "class": "inventory_monitor.InventoryMonitor"
+        },
+    ]
+}
