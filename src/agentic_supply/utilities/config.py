@@ -1,7 +1,7 @@
 import os
 from importlib import resources
 from dotenv import load_dotenv
-from typing import Literal, List
+from typing import Literal, List, Dict, Tuple
 
 load_dotenv(override=True)
 
@@ -27,4 +27,10 @@ AZURE_AI_NAME_DEEPSEEK = os.getenv("AZURE_AI_NAME_DEEPSEEK")
 VANNA_API_KEY = os.getenv("VANNA_API_KEY")
 
 # constants
-DATA_NAMES = Literal["supply_chain_medical", "supply_chain_logistics"]
+DATA_NAMES = Literal["example_data", "supply_chain_medical", "supply_chain_logistics"]
+DATA_TO_FILE: Dict[DATA_NAMES, List[Tuple]] = {
+    "example_data": "example_data.csv",
+    "supply_chain_medical": "SCMS_Delivery_History_Dataset.csv",
+    "supply_chain_logistics": "supply_chain_week_over_week.csv",
+}
+ARTIFACTS_DIR = "./logs"

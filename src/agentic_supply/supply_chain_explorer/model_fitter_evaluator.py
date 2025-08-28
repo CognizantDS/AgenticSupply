@@ -2,12 +2,13 @@ from typing import Any, Dict
 from neuro_san.interfaces.coded_tool import CodedTool
 import webbrowser
 import os
+import pickle
 
-from agentic_supply.causality_assistant.causal_graph_generation import generate_causal_graph
+from agentic_supply.causality_assistant.causal_model_fitting_evaluation import fit_eval_causal_model
 from agentic_supply.utilities.config import DATA_NAMES
 
 
-class GraphGenerator(CodedTool):
+class ModelFitterEvaluator(CodedTool):
     """
     CodedTool implementation of a calculator for the math_guy test.
 
@@ -41,9 +42,15 @@ class GraphGenerator(CodedTool):
         """
 
         data_name: DATA_NAMES = args.get("data_name")
-        causal_graph_path, image_filepath_html = generate_causal_graph(data_name)
-        sly_data["causal_graph_path"] = causal_graph_path
+        causal_graph_path = sly_data.get("causal_graph_path")
+
+        with open(causal_graph_path, "rb") as file:
+            causal_graph = pickle.load(file)
+
+        causal_model, evaluation, image_filepath_html = fit_eval_causal_model(data_name, causal_graph)
+        sly_data["causal_model"] = causal_model
+        sly_data["evaluation"] = evaluation
 
         webbrowser.open_new_tab(f"file://{os.path.abspath(image_filepath_html)}")
 
-        return "See the causal graph in the newly opened tab"
+        return "See the causal model evaluation graph in the newly opened tab"

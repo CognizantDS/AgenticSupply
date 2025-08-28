@@ -3,6 +3,7 @@ from neuro_san.interfaces.coded_tool import CodedTool
 
 
 from agentic_supply.data_assistant.data_downloading import download_data
+from agentic_supply.utilities.config import DATA_NAMES
 
 
 class DataDownloader(CodedTool):
@@ -38,7 +39,8 @@ class DataDownloader(CodedTool):
         :return: A return value that goes into the chat stream.
         """
 
-        target_path = download_data()
+        data_name: DATA_NAMES = args.get("data_name")
+        target_path = download_data(data_name)
         msg = f"CSV saved to: {target_path}" if target_path is not None else "Data download was cancelled."
 
         return msg

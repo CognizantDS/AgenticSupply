@@ -35,41 +35,70 @@ Choose your dataset of interest, and prompt me to create a causal graph or to do
 
             "instructions": """
 You are an agent network that helps users to perform causal analysis.
-You have access to two dataset :
+You have access to 3 datasets :
+- example_data
 - supply_chain_medical
 - supply_chain_logistics
 
 You must prompt the user to tell you the dataset they wish to select for the duration of the whole chat.
 
 Once selected, you can expect the user to request you to :
+- download the data they selected
 - generate a causal graph for the data they selected
-- download for the data they selected
+- fit and evaluate a causal model for the data they selected
+
 
 If the user does not mention either of these tasks, explain what you can provide to him and prompt him to choose one of these tasks.
 
-To generate a causal graph, call the graph_generator tool not more than once per user request.
-To enable the user to download and open the supply chain data, call the data_downloader tool not more than once per user request ; use its response to let the user know whether the download was successful, and if so, on what selected path it was performed.
-All tools include a 'data_name' argument, which refers to the data selected by the user and which must always be passed to the tool Literal['supply_chain_medical', 'supply_chain_logistics']
+To generate a causal graph, call the graph_generator tool.
+To enable the user to download and open the supply chain data, call the data_downloader tool ; use its response to let the user know whether the download was successful, and if so, on what selected path it was performed.
+To fit and evaluate a causal model, call the model_fitter_evaluator tool : the user must priorly have requested to generate the causal graph for this tool to work, prompt him to do so if not done so.
+
+All tools must not be ran not more than once per user request.
+All tools include a 'data_name' argument, which refers to the data selected by the user and which must always be passed to the tool Literal['example_data', 'supply_chain_medical', 'supply_chain_logistics']
 """,
-            "allow": {
-                "from_downstream": {
-                    # Specifying this allows sly_data keys to be ingested from downstream agents
-                    # as sly_data for this agent network
-                    "sly_data": ["equals"]
-                },
-                "to_upstream": {
-                    # Specifying this allows sly_data keys from this network to be passed back
-                    # to the calling client
-                    "sly_data": ["equals"]
+        "allow": {
+            "from_downstream": {
+                # Specifying this allows sly_data keys to be ingested from downstream agents
+                # as sly_data for this agent network
+                "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+            },
+            "to_upstream": {
+                # Specifying this allows sly_data keys from this network to be passed back
+                # to the calling client
+                "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+            },
+            "to_downstream": {
+                # Specifying this allows specific sly_data
+                # keys from this agent network to be sent
+                # to downstream agent networks
+                "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+            }
+        },
+
+        "tools": ["data_downloader", "graph_generator", "model_fitter_evaluator"]
+        },
+        {
+            "name": "data_downloader",
+            "function": {
+                "description": "Enables the user to download the data_name, automatically opens the file, and returns confirmation of download status with the path selected.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "data_name": {
+                            "type": "string",
+                            "description": "The name of the data to download."
+                        }
+                    },
+                    "required": ["data_name"]
                 }
             },
-
-            "tools": ["graph_generator", "data_downloader"]
+            "class": "data_downloader.DataDownloader"
         },
         {
             "name": "graph_generator",
             "function": {
-                "description": "Generates a causal graph for the supply chain data.",
+                "description": "Generates a causal graph for the data_name.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -84,21 +113,21 @@ All tools include a 'data_name' argument, which refers to the data selected by t
             "class": "graph_generator.GraphGenerator"
         },
         {
-            "name": "data_downloader",
+            "name": "model_fitter_evaluator",
             "function": {
-                "description": "Enables the user to download the supply chain data, automatically opens the file, and returns confirmation of download status with the path selected.",
+                "description": "Fits and evaluate a causal model for data_name. The user must have priorly generated the graph by the graph_generator (saved in sly_data).",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "data_name": {
                             "type": "string",
-                            "description": "The name of the data to download."
+                            "description": "The name of the data for which to fit and evaluate the causal model. Opens a tab with evaluation results."
                         }
                     },
                     "required": ["data_name"]
                 }
             },
-            "class": "data_downloader.DataDownloader"
-        }
+            "class": "model_fitter_evaluator.ModelFitterEvaluator"
+        },
     ]
 }

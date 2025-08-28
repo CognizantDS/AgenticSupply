@@ -10,16 +10,11 @@ from importlib.resources import files, as_file
 from typing import Dict, List, Tuple
 
 from agentic_supply.utilities.log_utils import set_logging, get_logger
-from agentic_supply.utilities.config import DATA_NAMES
+from agentic_supply.utilities.config import DATA_NAMES, DATA_TO_FILE
 from agentic_supply import data
 
 set_logging()
 logger = get_logger(__name__)
-
-DATA_TO_FILE: Dict[DATA_NAMES, List[Tuple]] = {
-    "supply_chain_medical": "SCMS_Delivery_History_Dataset.csv",
-    "supply_chain_logistics": "supply_chain_week_over_week.csv",
-}
 
 
 def download_data(data_name: DATA_NAMES, open_file: bool = True) -> str:
