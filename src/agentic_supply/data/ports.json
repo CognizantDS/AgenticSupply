@@ -1,0 +1,70 @@
+{
+    "ports": [
+        {
+            "port_name": "Laem Chabang",
+            "country": "Thailand",
+            "un_locode": "THLCH",
+            "coordinates": [
+                13.092964337293346,
+                100.9010530275548
+            ],
+            "timezone": "Asia/Bangkok",
+            "handling_time_days": 2
+        },
+        {
+            "port_name": "Singapore",
+            "country": "Singapore",
+            "un_locode": "SGSIN",
+            "coordinates": [
+                1.2644,
+                103.82
+            ],
+            "timezone": "Asia/Singapore",
+            "handling_time_days": 1
+        },
+        {
+            "port_name": "Colombo",
+            "country": "Sri Lanka",
+            "un_locode": "LKCMB",
+            "coordinates": [
+                6.9271,
+                79.8612
+            ],
+            "timezone": "Asia/Colombo",
+            "handling_time_days": 1
+        },
+        {
+            "port_name": "Port Klang",
+            "country": "Malaysia",
+            "un_locode": "MYPGU",
+            "coordinates": [
+                3.0033,
+                101.4
+            ],
+            "timezone": "Asia/Kuala_Lumpur",
+            "handling_time_days": 1
+        },
+        {
+            "port_name": "Suez Canal",
+            "country": "Egypt",
+            "un_locode": "EGSUZ",
+            "coordinates": [
+                30.5852,
+                32.2654
+            ],
+            "timezone": "Africa/Cairo",
+            "handling_time_days": 0
+        },
+        {
+            "port_name": "Rotterdam",
+            "country": "Netherlands",
+            "un_locode": "NLRTM",
+            "coordinates": [
+                51.9244201,
+                4.4777325
+            ],
+            "timezone": "Europe/Amsterdam",
+            "handling_time_days": 1
+        }
+    ]
+}

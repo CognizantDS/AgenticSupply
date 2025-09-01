@@ -71,20 +71,20 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
 
                 # The description acts as an initial prompt.
                 "description": """
-I am an agent network that can execute complex logistical tasks for Corbion.
-""",
+                I am an agent network that can execute complex logistical tasks for Corbion.
+                """,
             },
 
             "instructions": """
-You are the central agent for all transport-related activities. 
-You are responsible for handling all inquiries relating to logistical tasks for Corbion.
-Your primary objective is to ensure on-time, in-full delivery at the lowest possible total cost, while managing risk. 
-You act as the coordinator for a team of specialized sub-agents.
+            You are an agentic network that can :
+            1. Monitor stock and schedule manufacturing orders for given products (for this, delegate to stock_agent)
+            2. Plan and carry out logistics for delivering orders (for this, delegate to logistics_agent)
+            3. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
 
-{aaosa_instructions}
-When interacting with the user, act as the single point of interaction. No need to mention the other tools or agents.
-If there are any requirements that need user input, ask them one at a time, with clear examples of the choices available.
-""",
+            {aaosa_instructions}
+            When interacting with the user, act as the single point of interaction. No need to mention the other tools or agents.
+            If there are any requirements that need user input, ask them one at a time, with clear examples of the choices available.
+            """,
             "allow": {
                 "from_downstream": {
                     # Specifying this allows sly_data keys to be ingested from downstream agents
@@ -104,102 +104,135 @@ If there are any requirements that need user input, ask them one at a time, with
                 }
             },
 
-            "tools": ["inventory_agent", "procurement_agent", "manufacturing_agent", "land_carrier_agent", "port_agent", "ocean_carrier_agent", "hub_agent", "customer_agent"]
+            "tools": ["stock_agent", "logistics_agent", "customer_agent"]
         },
         # AGENTS
-        {
-            "name": "inventory_agent",
-            "function": "aaosa_call",
-            "instructions": """
-You are responsible for monitoring stock levels at all Corbion facilities and distribution hubs. 
-Your goal is to maintain optimal inventory, triggering replenishment or production orders when stock falls below dynamic thresholds. 
-Use the inventory_monitor tool to obtain current stock level and set safety level, and to verify if a product must be replenished : you must pass the product_name as one of 'lactic_acid', 'ascorbic_acid'.
-{aaosa_instructions}
-            """,
-            "command": "aaosa_command",
-            "tools": ["inventory_monitor"]
-        },
-        {
-            "name": "procurement_agent",
-            "function": "aaosa_call",
-            "instructions": """
-You are responsible for managing the acquisition of raw materials needed for production. 
-While not directly involved in the finished product shipment, your actions precede this flow by ensuring production can occur.
-{aaosa_instructions}
-            """,
-            "command": "aaosa_command",
-            # "tools": ["Security_agent", "Networking_agent"]
-        },
-        {
-            "name": "manufacturing_agent",
-            "function": "aaosa_call",
-            "instructions": """
-You are responsible for overseeing production scheduling and execution at facilities like the Rayong, Thailand plant. 
-Your goal is to fulfill production orders efficiently while monitoring asset health and process parameters. 
-Use the manufacturing_scheduler tool to schedule a manufacturing order for a product. 
-Use the manufacturing_completion_verifier tool to verify if an order was completed. and to verify if a product must be replenished. 
-For both tools, you must pass the product_name as one of 'lactic_acid', 'ascorbic_acid'.
-
-{aaosa_instructions}
-            """,
-            "command": "aaosa_command",
-            "tools": ["manufacturing_scheduler", "manufacturing_completion_verifier"]
-        },
-        {
-            "name": "land_carrier_agent",
-            "function": "aaosa_call",
-            "instructions": """
-You represent a specific trucking or rail company. 
-You receive transport tasks, provide ETAs, and transmit real-time location data for ground-based movements.
-{aaosa_instructions}
-            """,
-            "command": "aaosa_command",
-            # "tools": ["Security_agent", "Networking_agent"]
-        },
-        {
-            "name": "port_agent",
-            "function": "aaosa_call",
-            "instructions": """
-You represent a specific seaport's operational system (e.g., Port of Laem Chabang, Port of Rotterdam). 
-You manage container check-in, customs documentation, loading/unloading schedules, and you report on port congestion levels. 
-{aaosa_instructions}
-            """,
-            "command": "aaosa_command",
-            # "tools": ["Security_agent", "Networking_agent"]
-        },
-        {
-            "name": "ocean_carrier_agent",
-            "function": "aaosa_call",
-            "instructions": """
-You represent a specific shipping line (e.g., Maersk, MSC).
-You provide vessel schedules, booking confirmations, container tracking data (GPS), and you alert for at-sea delays. 
-{aaosa_instructions}
-            """,
-            "command": "aaosa_command",
-            # "tools": ["Security_agent", "Networking_agent"]
-        },
-        {
-            "name": "hub_agent",
-            "function": "aaosa_call",
-            "instructions": """
-You are responsible for managing operations at a regional distribution hub. 
-This includes receiving bulk shipments, performing quality assurance checks, and potentially conducting final-stage processing like remixing or custom packaging before final delivery. 
-{aaosa_instructions}
-            """,
-            "command": "aaosa_command",
-            # "tools": ["Security_agent", "Networking_agent"]
-        },
         {
             "name": "customer_agent",
             "function": "aaosa_call",
             "instructions": """
-You represent the end customer's digital interface or ERP system. 
-You confirm receipt of goods and you provide feedback on delivery performance. 
-{aaosa_instructions}
+            You represent the end customer's digital interface or ERP system. 
+            You confirm receipt of goods and you provide feedback on delivery performance. 
+            {aaosa_instructions}
             """,
             "command": "aaosa_command",
             # "tools": ["Security_agent", "Networking_agent"]
         },
+        # STOCK AGENT
+        {
+            "name": "stock_agent",
+            "function": "aaosa_call",
+            "instructions": """
+            You are responsible for monitoring stock levels and scheduling manufacturing orders at all Corbion facilities and distribution hubs. 
+            Delegate to the inventory_agent tool for queries regarding monitoring stock levels.
+            Delegate to the manufacturing_agent for queries regarding scheduling and verifying the status of manufacturing orders.
+            {aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["inventory_agent", "procurement_agent", "manufacturing_agent"]
+        },
+            # SUB-AGENTS
+            {
+                "name": "inventory_agent",
+                "function": "aaosa_call",
+                "instructions": """
+                You are responsible for monitoring stock levels at all Corbion facilities and distribution hubs. 
+                Your goal is to maintain optimal inventory, triggering replenishment or production orders when stock falls below dynamic thresholds. 
+                Use the inventory_monitor tool to obtain current stock level and set safety level, and to verify if a product must be replenished : you must pass the product_name as one of 'lactic_acid', 'ascorbic_acid'.
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                "tools": ["inventory_monitor"]
+            },
+            {
+                "name": "procurement_agent",
+                "function": "aaosa_call",
+                "instructions": """
+                You are responsible for managing the acquisition of raw materials needed for production. 
+                While not directly involved in the finished product shipment, your actions precede this flow by ensuring production can occur.
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                # "tools": ["Security_agent", "Networking_agent"]
+            },
+            {
+                "name": "manufacturing_agent",
+                "function": "aaosa_call",
+                "instructions": """
+                You are responsible for overseeing production scheduling and execution at facilities like the Rayong, Thailand plant. 
+                Your goal is to fulfill production orders efficiently while monitoring asset health and process parameters. 
+                Use the manufacturing_scheduler tool to schedule a manufacturing order for a product. 
+                Use the manufacturing_completion_verifier tool to verify if an order was completed. and to verify if a product must be replenished. 
+                For both tools, you must pass the product_name as one of 'lactic_acid', 'ascorbic_acid'.
+
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                "tools": ["manufacturing_scheduler", "manufacturing_completion_verifier"]
+            },
+        # LOGISTICS AGENT
+        {
+            "name": "logistics_agent",
+            "function": "aaosa_call",
+            "instructions": """
+            You are the central agent for all transport-related activities. 
+            You are responsible for handling all inquiries relating to logistical tasks for Corbion.
+            Your primary objective is to ensure on-time, in-full delivery at the lowest possible total cost, while managing risk. 
+            You act as the coordinator for a team of specialized sub-agents.
+
+            Use ocean_carrier_agent for carrying out logistics planning regarding port to port transportation.
+            {aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["land_carrier_agent", "ocean_carrier_agent", "hub_agent"]
+        },
+            # SUB-AGENTS
+            {
+                "name": "land_carrier_agent",
+                "function": "aaosa_call",
+                "instructions": """
+                You represent a specific trucking or rail company. 
+                You receive transport tasks, provide ETAs, and transmit real-time location data for ground-based movements.
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                # "tools": ["Security_agent", "Networking_agent"]
+            },
+            {
+                "name": "port_agent",
+                "function": "aaosa_call",
+                "instructions": """
+                You represent a specific seaport's operational system (e.g., Port of Laem Chabang, Port of Rotterdam). 
+                You manage container check-in, customs documentation, loading/unloading schedules, and you report on port congestion levels. 
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                # "tools": ["Security_agent", "Networking_agent"]
+            },
+            {
+                "name": "ocean_carrier_agent",
+                "function": "aaosa_call",
+                # You represent a specific shipping line (e.g., Maersk, MSC).
+                "instructions": """
+                You provide vessel schedules, booking confirmations, container tracking data (GPS), and you alert for at-sea delays. 
+                Use ocean_routes_planner to provide available routes for an origin port to a destination port.
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                "tools": ["ocean_routes_planner"]
+            },
+            {
+                "name": "hub_agent",
+                "function": "aaosa_call",
+                "instructions": """
+                You are responsible for managing operations at a regional distribution hub. 
+                This includes receiving bulk shipments, performing quality assurance checks, and potentially conducting final-stage processing like remixing or custom packaging before final delivery. 
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                # "tools": ["Security_agent", "Networking_agent"]
+            },
+        
         # CODED TOOLS
         {
             "name": "inventory_monitor",
@@ -221,16 +254,24 @@ You confirm receipt of goods and you provide feedback on delivery performance.
         {
             "name": "manufacturing_scheduler",
             "function": {
-                "description": "API to schedule a manufacturing order for a given product. Returns the order_id and the order_time.",
+                "description": "API to schedule a manufacturing order for a given product. Returns the order_id.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "product_name": {
                             "type": "string",
                             "description": "The name of the product for which to schedule a manufacturing order. One of 'lactic_acid', 'ascorbic_acid'."
+                        },
+                        "destination": {
+                            "type": "string",
+                            "description": "The destination for which the product must be ordered. One of 'Germany', 'Netherlands', 'Belgium', 'Denmark'."
+                        },
+                        "required_delivery_date": {
+                            "type": "string",
+                            "description": "The delivery date required for the order."
                         }
                     },
-                    "required": ["product_name"]
+                    "required": ["product_name", "destination", "required_delivery_date"]
                 }
             },
             "class": "manufacturing_coordinator.ManufacturingScheduler"
@@ -250,15 +291,32 @@ You confirm receipt of goods and you provide feedback on delivery performance.
                             "type": "string",
                             "description": "The ID of the manufacturing order."
                         },
-                        "order_time": {
-                            "type": "float",
-                            "description": "The time at which the manufacturing order was made."
-                        }
                     },
-                    "required": ["product_name", "order_id", "order_time"]
+                    "required": ["product_name", "order_id"]
                 }
             },
             "class": "manufacturing_coordinator.ManufacturingCompletionVerifier"
+        },
+        {
+            "name": "ocean_routes_planner",
+            "function": {
+                "description": "API to get possible ocean routes from an origin port to a destination port. Returns the available ocean routes.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "origin": {
+                            "type": "string",
+                            "description": "The port of origin."
+                        },
+                        "destination": {
+                            "type": "string",
+                            "description": "The destination port."
+                        },
+                    },
+                    "required": ["origin", "destination"]
+                }
+            },
+            "class": "ocean_routes_planner.OceanRoutesPlanner"
         },
     ]
 }

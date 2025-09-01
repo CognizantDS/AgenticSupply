@@ -3,6 +3,7 @@ References :
 """
 
 from typing import Dict, List, Tuple, Optional
+from pydantic import BaseModel, Field
 
 from agentic_supply.utilities.log_utils import set_logging, get_logger
 from agentic_supply.utilities.config import PRODUCT_NAMES
@@ -10,6 +11,12 @@ from agentic_supply.utilities.config import PRODUCT_NAMES
 
 set_logging()
 logger = get_logger(__name__)
+
+
+# class Product(BaseModel):
+#     name: PRODUCT_NAMES
+#     measurement_unit: str
+#     safety_level: float
 
 
 def get_stock_level(product_name: PRODUCT_NAMES) -> float:

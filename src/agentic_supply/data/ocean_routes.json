@@ -1,0 +1,43 @@
+{
+    "ocean_routes": [
+        {
+            "origin": "Laem Chabang",
+            "destination": "Rotterdam",
+            "carrier": "Maersk",
+            "transit_time_days": 24,
+            "cost_usd": 1500,
+            "frequency_per_week": 3,
+            "via": [
+                "Singapore",
+                "Suez Canal"
+            ],
+            "scenario": "fastest"
+        },
+        {
+            "origin": "Laem Chabang",
+            "destination": "Rotterdam",
+            "carrier": "COSCO",
+            "transit_time_days": 32,
+            "cost_usd": 1000,
+            "frequency_per_week": 1,
+            "via": [
+                "Colombo",
+                "Suez Canal"
+            ],
+            "scenario": "cheapest"
+        },
+        {
+            "origin": "Laem Chabang",
+            "destination": "Rotterdam",
+            "carrier": "MSC",
+            "transit_time_days": 28,
+            "cost_usd": 1200,
+            "frequency_per_week": 2,
+            "via": [
+                "Port Klang",
+                "Suez Canal"
+            ],
+            "scenario": "balanced"
+        }
+    ]
+}
