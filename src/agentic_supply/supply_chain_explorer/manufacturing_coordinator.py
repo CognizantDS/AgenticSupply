@@ -2,7 +2,7 @@ from typing import Any, Dict
 from neuro_san.interfaces.coded_tool import CodedTool
 
 
-from agentic_supply.manufacturing_assistant.scheduling_notifying import order_replenishment, verify_completion_status
+from agentic_supply.manufacturing_assistant.scheduling_notifying import get_order_db, Order
 from agentic_supply.utilities.config import PRODUCT_NAMES
 
 
@@ -40,8 +40,11 @@ class ManufacturingScheduler(CodedTool):
         """
 
         product_name: PRODUCT_NAMES = args.get("product_name")
-        order_id, order_time = order_replenishment(product_name)
-        return f"The order of {product_name} was scheduled with : order_id={order_id}, order_time={order_time}"
+        destination: PRODUCT_NAMES = args.get("destination")
+        required_delivery_date: PRODUCT_NAMES = args.get("required_delivery_date")
+        order = Order(product_name=product_name, destination=destination, required_delivery_date=required_delivery_date)
+        order.schedule()
+        return f"The order of {product_name} was scheduled with : order_id={order.id}, order_time={order.schedule_time}"
 
 
 class ManufacturingCompletionVerifier(CodedTool):
@@ -79,6 +82,7 @@ class ManufacturingCompletionVerifier(CodedTool):
 
         product_name: PRODUCT_NAMES = args.get("product_name")
         order_id = args.get("order_id")
-        order_time = args.get("order_time")
-        status, remaining_time = verify_completion_status(product_name=product_name, order_id=order_id, order_time=order_time)
+        order_db = get_order_db()
+        order = order_db.get_order(order_id)
+        status, remaining_time = order.verify_completion_status()
         return f"The order of {product_name} ({order_id}) is {status} {'' if status == 'complete' else f'({remaining_time} seconds left)'}"
