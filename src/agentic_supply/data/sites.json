@@ -1,0 +1,66 @@
+{
+    "sites": [
+        {
+            "name": "Rayong Site",
+            "country": "Thailand",
+            "coordinates": [
+                12.6814,
+                101.281
+            ],
+            "products": [
+                {
+                    "name": "PURAC_FCC",
+                    "stock_level": 90
+                },
+                {
+                    "name": "PURASAL",
+                    "stock_level": 80
+                },
+                {
+                    "name": "GLUCONAL",
+                    "stock_level": 85
+                }
+            ]
+        },
+        {
+            "name": "Chonbury Site",
+            "country": "Thailand",
+            "coordinates": [
+                13.259859,
+                100.942429
+            ],
+            "products": [
+                {
+                    "name": "Verdad",
+                    "stock_level": 60
+                },
+                {
+                    "name": "origin_powder_R02",
+                    "stock_level": 70
+                },
+                {
+                    "name": "origin_powder_AC34",
+                    "stock_level": 70
+                }
+            ]
+        },
+        {
+            "name": "Bangkok Site",
+            "country": "Thailand",
+            "coordinates": [
+                13.72,
+                100.54
+            ],
+            "products": [
+                {
+                    "name": "PURAC_FCC",
+                    "stock_level": 100
+                },
+                {
+                    "name": "origin_powder_R02",
+                    "stock_level": 70
+                }
+            ]
+        }
+    ]
+}

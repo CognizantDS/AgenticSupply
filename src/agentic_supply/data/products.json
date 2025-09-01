@@ -1,0 +1,28 @@
+{
+    "products": [
+        {
+            "name": "PURAC_FCC",
+            "safety_level": 92
+        },
+        {
+            "name": "PURASAL",
+            "safety_level": 85
+        },
+        {
+            "name": "GLUCONAL",
+            "safety_level": 78
+        },
+        {
+            "name": "Verdad",
+            "safety_level": 88
+        },
+        {
+            "name": "origin_powder_R02",
+            "safety_level": 73
+        },
+        {
+            "name": "origin_powder_AC34",
+            "safety_level": 69
+        }
+    ]
+}

@@ -138,11 +138,13 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 "instructions": """
                 You are responsible for monitoring stock levels at all Corbion facilities and distribution hubs. 
                 Your goal is to maintain optimal inventory, triggering replenishment or production orders when stock falls below dynamic thresholds. 
-                Use the inventory_monitor tool to obtain current stock level and set safety level, and to verify if a product must be replenished : you must pass the product_name as one of 'lactic_acid', 'ascorbic_acid'.
+                Use the products_querier tool to obtain the products data across all sites (includes safety level).
+                Use the sites_querier tool to obtain the sites data and the products they manufacture
+                Use the inventory_monitor tool to verify whether a product needs to be replenished at a specific site, or at any site.
                 {aaosa_instructions}
                 """,
                 "command": "aaosa_command",
-                "tools": ["inventory_monitor"]
+                "tools": ["inventory_monitor", "products_querier", "sites_querier"]
             },
             {
                 "name": "procurement_agent",
@@ -238,19 +240,37 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
         {
             "name": "inventory_monitor",
             "function": {
-                "description": "API to check the stock level and safety level of the given product, and whether it needs to be replenished.",
+                "description": "API to check the replenishment needs of the given product. If no site_name is given, it will check the replenishment needs of the products for all sites, otherwise only for the given site.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "product_name": {
                             "type": "string",
-                            "description": "The name of the product for which to check the stock level, safety level and replenishment needs. One of 'lactic_acid', 'ascorbic_acid'."
-                        }
+                            "description": "The name of the product for which to check the replenishment needs. One of 'PURAC_FCC', 'PURASAL', 'GLUCONAL', 'Verdad', 'origin_powder_R02', 'origin_powder_AC34'."
+                        },
+                        "site_name": {
+                            "type": "string",
+                            "description": "The name of the site for which to check the replenishment needs (optional)."
+                        },
                     },
                     "required": ["product_name"]
                 }
             },
             "class": "inventory_monitor.InventoryMonitor"
+        },
+        {
+            "name": "products_querier",
+            "function": {
+                "description": "API to check the generic data on the products (name, safety level).",
+            },
+            "class": "inventory_monitor.ProductsQuerier"
+        },
+        {
+            "name": "sites_querier",
+            "function": {
+                "description": "API to check the generic data on the sites (name, country, coordinates, products).",
+            },
+            "class": "inventory_monitor.SitesQuerier"
         },
         {
             "name": "manufacturing_scheduler",
