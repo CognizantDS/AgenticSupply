@@ -181,6 +181,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             You act as the coordinator for a team of specialized sub-agents.
 
             Use ocean_carrier_agent for carrying out logistics planning regarding port to port transportation.
+            Use land_carrier_agent for carrying out logistics planning regarding land to land transportation.
             {aaosa_instructions}
             """,
             "command": "aaosa_command",
@@ -196,7 +197,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 {aaosa_instructions}
                 """,
                 "command": "aaosa_command",
-                # "tools": ["Security_agent", "Networking_agent"]
+                "tools": ["land_routes_planner"]
             },
             {
                 "name": "port_agent",
@@ -317,6 +318,31 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 }
             },
             "class": "ocean_routes_planner.OceanRoutesPlanner"
+        },
+        {
+            "name": "land_routes_planner",
+            "function": {
+                "description": "API to get possible land routes from an origin to a destination location. Returns the available land routes.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "origin": {
+                            "type": "string",
+                            "description": "The origin location."
+                        },
+                        "destination": {
+                            "type": "string",
+                            "description": "The destination location."
+                        },
+                        "transport_mode": {
+                            "type": "string",
+                            "description": "The mode of transportation (one of truck, rail)."
+                        },
+                    },
+                    "required": ["origin", "destination"]
+                }
+            },
+            "class": "land_routes_planner.LandRoutesPlanner"
         },
     ]
 }

@@ -1,0 +1,124 @@
+{
+    "land_routes": [
+        {
+            "carrier": "Thai Global Logistics",
+            "transport_mode": "truck",
+            "origin": "Corbion Rayong Plant, Thailand",
+            "destination": "Laem Chabang Port, Thailand",
+            "distance_km": 45,
+            "transit_time_days": 1,
+            "cost_usd": 120,
+            "scenario": "cheapest"
+        },
+        {
+            "carrier": "Maersk Inland Services",
+            "transport_mode": "truck",
+            "origin": "Corbion Rayong Plant, Thailand",
+            "destination": "Laem Chabang Port, Thailand",
+            "distance_km": 45,
+            "transit_time_days": 0.5,
+            "cost_usd": 180,
+            "scenario": "fastest"
+        },
+        {
+            "carrier": "Siam Shipping",
+            "transport_mode": "truck",
+            "origin": "Corbion Rayong Plant, Thailand",
+            "destination": "Laem Chabang Port, Thailand",
+            "distance_km": 45,
+            "transit_time_days": 1,
+            "cost_usd": 150,
+            "scenario": "balanced"
+        },
+        {
+            "carrier": "Thai Rail Logistics",
+            "transport_mode": "rail",
+            "origin": "Corbion Rayong Plant, Thailand",
+            "destination": "Laem Chabang Port, Thailand",
+            "distance_km": 50,
+            "transit_time_days": 1.5,
+            "cost_usd": 100,
+            "scenario": "cheapest"
+        },
+        {
+            "carrier": "State Railway of Thailand",
+            "transport_mode": "rail",
+            "origin": "Corbion Rayong Plant, Thailand",
+            "destination": "Laem Chabang Port, Thailand",
+            "distance_km": 50,
+            "transit_time_days": 1,
+            "cost_usd": 140,
+            "scenario": "balanced"
+        },
+        {
+            "carrier": "Maersk Rail Services",
+            "transport_mode": "rail",
+            "origin": "Corbion Rayong Plant, Thailand",
+            "destination": "Laem Chabang Port, Thailand",
+            "distance_km": 50,
+            "transit_time_days": 0.75,
+            "cost_usd": 170,
+            "scenario": "fastest"
+        },
+        {
+            "carrier": "DB Schenker",
+            "transport_mode": "truck",
+            "origin": "Rotterdam Port, Netherlands",
+            "destination": "Henkel Facility, Düsseldorf, Germany",
+            "distance_km": 230,
+            "transit_time_days": 2,
+            "cost_usd": 300,
+            "scenario": "cheapest"
+        },
+        {
+            "carrier": "Saloodo! (DHL)",
+            "transport_mode": "truck",
+            "origin": "Rotterdam Port, Netherlands",
+            "destination": "Henkel Facility, Düsseldorf, Germany",
+            "distance_km": 230,
+            "transit_time_days": 1,
+            "cost_usd": 450,
+            "scenario": "fastest"
+        },
+        {
+            "carrier": "Rhenus Logistics",
+            "transport_mode": "truck",
+            "origin": "Rotterdam Port, Netherlands",
+            "destination": "Henkel Facility, Düsseldorf, Germany",
+            "distance_km": 230,
+            "transit_time_days": 1.5,
+            "cost_usd": 375,
+            "scenario": "balanced"
+        },
+        {
+            "carrier": "DB Cargo",
+            "transport_mode": "rail",
+            "origin": "Rotterdam Port, Netherlands",
+            "destination": "Henkel Facility, Düsseldorf, Germany",
+            "distance_km": 250,
+            "transit_time_days": 2.5,
+            "cost_usd": 280,
+            "scenario": "cheapest"
+        },
+        {
+            "carrier": "Rail Cargo Group",
+            "transport_mode": "rail",
+            "origin": "Rotterdam Port, Netherlands",
+            "destination": "Henkel Facility, Düsseldorf, Germany",
+            "distance_km": 250,
+            "transit_time_days": 2,
+            "cost_usd": 350,
+            "scenario": "balanced"
+        },
+        {
+            "carrier": "SBB Cargo International",
+            "transport_mode": "rail",
+            "origin": "Rotterdam Port, Netherlands",
+            "destination": "Henkel Facility, Düsseldorf, Germany",
+            "distance_km": 250,
+            "transit_time_days": 1.5,
+            "cost_usd": 420,
+            "scenario": "fastest"
+        }
+    ]
+}

@@ -56,3 +56,32 @@ class OceanRoutesDB(BaseModel):
 def get_ocean_routes_db():
     json_data = files(data).joinpath("ocean_routes.json").read_text()
     return OceanRoutesDB.model_validate_json(json_data)
+
+
+class LandRoute(BaseModel):
+    origin: str
+    destination: str
+    carrier: str
+    transport_mode: str
+    scenario: str
+    transit_time_days: float
+    cost_usd: float
+    distance_km: float
+
+
+class LandRoutesDB(BaseModel):
+    land_routes: List[LandRoute] = []
+
+    def get_routes(self, origin: str, destination: str, transport_mode: Optional[str] = None) -> Port:
+        return [
+            elem
+            for elem in self.land_routes
+            if elem.origin == origin
+            and elem.destination == destination
+            and (transport_mode is None or elem.transport_mode == transport_mode)
+        ]
+
+
+def get_land_routes_db():
+    json_data = files(data).joinpath("land_routes.json").read_text()
+    return LandRoutesDB.model_validate_json(json_data)
