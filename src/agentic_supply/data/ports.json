@@ -1,7 +1,7 @@
 {
     "ports": [
         {
-            "port_name": "Laem Chabang",
+            "name": "Laem Chabang",
             "country": "Thailand",
             "un_locode": "THLCH",
             "coordinates": [
@@ -12,7 +12,7 @@
             "handling_time_days": 2
         },
         {
-            "port_name": "Singapore",
+            "name": "Singapore",
             "country": "Singapore",
             "un_locode": "SGSIN",
             "coordinates": [
@@ -23,7 +23,7 @@
             "handling_time_days": 1
         },
         {
-            "port_name": "Colombo",
+            "name": "Colombo",
             "country": "Sri Lanka",
             "un_locode": "LKCMB",
             "coordinates": [
@@ -34,7 +34,7 @@
             "handling_time_days": 1
         },
         {
-            "port_name": "Port Klang",
+            "name": "Port Klang",
             "country": "Malaysia",
             "un_locode": "MYPGU",
             "coordinates": [
@@ -45,7 +45,7 @@
             "handling_time_days": 1
         },
         {
-            "port_name": "Suez Canal",
+            "name": "Suez Canal",
             "country": "Egypt",
             "un_locode": "EGSUZ",
             "coordinates": [
@@ -56,7 +56,7 @@
             "handling_time_days": 0
         },
         {
-            "port_name": "Rotterdam",
+            "name": "Rotterdam",
             "country": "Netherlands",
             "un_locode": "NLRTM",
             "coordinates": [

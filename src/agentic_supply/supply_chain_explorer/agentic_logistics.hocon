@@ -190,10 +190,11 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
 
             Use ocean_carrier_agent for carrying out logistics planning regarding port to port transportation.
             Use land_carrier_agent for carrying out logistics planning regarding land to land transportation.
+            Use the port_agent tool to get ports data and to monitor ports for any issues.
             {aaosa_instructions}
             """,
             "command": "aaosa_command",
-            "tools": ["land_carrier_agent", "ocean_carrier_agent", "hub_agent"]
+            "tools": ["land_carrier_agent", "ocean_carrier_agent", "hub_agent", "port_agent"]
         },
             # SUB-AGENTS
             {
@@ -210,13 +211,16 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             {
                 "name": "port_agent",
                 "function": "aaosa_call",
+                # You represent a specific seaport's operational system (e.g., Port of Laem Chabang, Port of Rotterdam).
                 "instructions": """
-                You represent a specific seaport's operational system (e.g., Port of Laem Chabang, Port of Rotterdam). 
+                You monitor port data impacting product shipping.
                 You manage container check-in, customs documentation, loading/unloading schedules, and you report on port congestion levels. 
+                Use the ports_querier tool to get port data.
+                Use the ports_monitor tool to assess port issues.
                 {aaosa_instructions}
                 """,
                 "command": "aaosa_command",
-                # "tools": ["Security_agent", "Networking_agent"]
+                "tools": ["ports_querier", "ports_monitor"]
             },
             {
                 "name": "ocean_carrier_agent",
@@ -224,7 +228,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 # You represent a specific shipping line (e.g., Maersk, MSC).
                 "instructions": """
                 You provide vessel schedules, booking confirmations, container tracking data (GPS), and you alert for at-sea delays. 
-                Use ocean_routes_planner to provide available routes for an origin port to a destination port.
+                Use the ocean_routes_planner tool to provide available routes for an origin port to a destination port.
                 {aaosa_instructions}
                 """,
                 "command": "aaosa_command",
@@ -243,6 +247,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             },
         
         # CODED TOOLS
+        ## INVENTORY
         {
             "name": "inventory_monitor",
             "function": {
@@ -278,6 +283,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             },
             "class": "inventory_monitor.SitesQuerier"
         },
+        ## MANUFACTURING
         {
             "name": "manufacturing_scheduler",
             "function": {
@@ -327,6 +333,21 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 }
             },
             "class": "manufacturing_coordinator.ManufacturingCompletionVerifier"
+        },
+        ## LOGISTICS
+        {
+            "name": "ports_querier",
+            "function": {
+                "description": "API to check the generic data on the ports (name, country, coordinates, handling_time_days).",
+            },
+            "class": "ports_monitor.PortsQuerier"
+        },
+        {
+            "name": "ports_monitor",
+            "function": {
+                "description": "API to verify the status of the ports.",
+            },
+            "class": "ports_monitor.PortsMonitor"
         },
         {
             "name": "ocean_routes_planner",

@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 
 class Port(BaseModel):
-    port_name: str
+    name: str
     country: str
     un_locode: str
     coordinates: List[float]
@@ -26,11 +26,11 @@ class Port(BaseModel):
 class PortsDB(BaseModel):
     ports: List[Port] = []
 
-    def get_port(self, port_name: str) -> Port:
-        return next((elem for elem in self.ports if elem.port_name == port_name))
+    def get_port(self, name: str) -> Port:
+        return next((elem for elem in self.ports if elem.name == name))
 
 
-def get_port_db():
+def get_ports_db():
     json_data = files(data).joinpath("ports.json").read_text()
     return PortsDB.model_validate_json(json_data)
 
