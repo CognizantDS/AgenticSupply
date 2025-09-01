@@ -76,11 +76,16 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             },
 
             "instructions": """
-            You are an agentic network that can :
-            1. Monitor stock and schedule manufacturing orders for given products (for this, delegate to stock_agent)
-            2. Plan and carry out logistics for delivering orders (for this, delegate to logistics_agent)
-            3. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
-
+            You are an agentic network that represent Corbion's logistics ecosystem and that can help users in the typical flow of : 
+            1. Monitor stocks of products across our sites (for this, delegate to stock_agent)
+            2. Schedule manufacturing orders for given products at given sites (for this, delegate to stock_agent)
+            3. Plan and carry out logistics for delivering orders (for this, delegate to logistics_agent)
+            4. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
+            
+            Always be proactive :
+            - This is a step-wise procedure, thus finish your response by prompting the user to carry out the next step. 
+            - Use the querier tools to gather data on products, sites and routes before requesting the user to provide more information. 
+            - Infer data if not explicitly mentioned by the user, and then ask for confirmation (instead of asking for exact data, for e.g. tool calling).
             {aaosa_instructions}
             When interacting with the user, act as the single point of interaction. No need to mention the other tools or agents.
             If there are any requirements that need user input, ask them one at a time, with clear examples of the choices available.
@@ -89,18 +94,18 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 "from_downstream": {
                     # Specifying this allows sly_data keys to be ingested from downstream agents
                     # as sly_data for this agent network
-                    "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                    "sly_data": ["order_id", "causal_model", "evaluation"]
                 },
                 "to_upstream": {
                     # Specifying this allows sly_data keys from this network to be passed back
                     # to the calling client
-                    "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                    "sly_data": ["order_id", "causal_model", "evaluation"]
                 },
                 "to_downstream": {
                     # Specifying this allows specific sly_data
                     # keys from this agent network to be sent
                     # to downstream agent networks
-                    "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                    "sly_data": ["order_id", "causal_model", "evaluation"]
                 }
             },
 
@@ -124,7 +129,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             "function": "aaosa_call",
             "instructions": """
             You are responsible for monitoring stock levels and scheduling manufacturing orders at all Corbion facilities and distribution hubs. 
-            Delegate to the inventory_agent tool for queries regarding monitoring stock levels.
+            Delegate to the inventory_agent tool for queries regarding monitoring product stock levels, products and sites data.
             Delegate to the manufacturing_agent for queries regarding scheduling and verifying the status of manufacturing orders.
             {aaosa_instructions}
             """,
@@ -138,8 +143,8 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 "instructions": """
                 You are responsible for monitoring stock levels at all Corbion facilities and distribution hubs. 
                 Your goal is to maintain optimal inventory, triggering replenishment or production orders when stock falls below dynamic thresholds. 
-                Use the products_querier tool to obtain the products data across all sites (includes safety level).
-                Use the sites_querier tool to obtain the sites data and the products they manufacture
+                Use the products_querier tool to obtain the products data across all sites (includes safety level and production time).
+                Use the sites_querier tool to obtain the sites data and the products they manufacture.
                 Use the inventory_monitor tool to verify whether a product needs to be replenished at a specific site, or at any site.
                 {aaosa_instructions}
                 """,
@@ -161,11 +166,10 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 "name": "manufacturing_agent",
                 "function": "aaosa_call",
                 "instructions": """
-                You are responsible for overseeing production scheduling and execution at facilities like the Rayong, Thailand plant. 
+                You are responsible for overseeing production scheduling and execution at Corbion manufacturing sites. 
                 Your goal is to fulfill production orders efficiently while monitoring asset health and process parameters. 
-                Use the manufacturing_scheduler tool to schedule a manufacturing order for a product. 
-                Use the manufacturing_completion_verifier tool to verify if an order was completed. and to verify if a product must be replenished. 
-                For both tools, you must pass the product_name as one of 'lactic_acid', 'ascorbic_acid'.
+                Use the manufacturing_scheduler tool to schedule a manufacturing order for a product at a site. Always give the returned order_id and the expected completion_duration.
+                Use the manufacturing_completion_verifier tool to verify if an order was completed.
 
                 {aaosa_instructions}
                 """,
@@ -181,6 +185,8 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             You are responsible for handling all inquiries relating to logistical tasks for Corbion.
             Your primary objective is to ensure on-time, in-full delivery at the lowest possible total cost, while managing risk. 
             You act as the coordinator for a team of specialized sub-agents.
+            Upon request from the user, plan routes completely from start to end location using your tools.
+            Infer the precise locations from the user, do not ask specific names of locations, present the user with the best complete land and ocean routes you can infer.
 
             Use ocean_carrier_agent for carrying out logistics planning regarding port to port transportation.
             Use land_carrier_agent for carrying out logistics planning regarding land to land transportation.
@@ -275,13 +281,21 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
         {
             "name": "manufacturing_scheduler",
             "function": {
-                "description": "API to schedule a manufacturing order for a given product. Returns the order_id.",
+                "description": "API to schedule a manufacturing order for a given product. Returns the order_id and the expected completion_duration.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "product_name": {
                             "type": "string",
-                            "description": "The name of the product for which to schedule a manufacturing order. One of 'lactic_acid', 'ascorbic_acid'."
+                            "description": "The name of the product for which to schedule a manufacturing order. One of 'PURAC_FCC', 'PURASAL', 'GLUCONAL', 'Verdad', 'origin_powder_R02', 'origin_powder_AC34'."
+                        },
+                        "site_name": {
+                            "type": "string",
+                            "description": "The name of the site in which to schedule a manufacturing order. One of 'Rayong Site', 'Chonbury Site', 'Bangkok Site'."
+                        },
+                        "quantity": {
+                            "type": "float",
+                            "description": "The quantity (number of units) of the product to manufacture."
                         },
                         "destination": {
                             "type": "string",
@@ -292,7 +306,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                             "description": "The delivery date required for the order."
                         }
                     },
-                    "required": ["product_name", "destination", "required_delivery_date"]
+                    "required": ["product_name", "site_name", "quantity", "destination", "required_delivery_date"]
                 }
             },
             "class": "manufacturing_coordinator.ManufacturingScheduler"
@@ -300,20 +314,16 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
         {
             "name": "manufacturing_completion_verifier",
             "function": {
-                "description": "API to verify the completion status of a manufacturing order for a given product. Returns the status.",
+                "description": "API to verify the completion status of a manufacturing order for a given order_id. Returns the status.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "product_name": {
-                            "type": "string",
-                            "description": "The name of the product for which to schedule a manufacturing order. One of 'lactic_acid', 'ascorbic_acid'."
-                        },
                         "order_id": {
                             "type": "string",
                             "description": "The ID of the manufacturing order."
                         },
                     },
-                    "required": ["product_name", "order_id"]
+                    "required": ["order_id"]
                 }
             },
             "class": "manufacturing_coordinator.ManufacturingCompletionVerifier"

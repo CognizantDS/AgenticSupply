@@ -18,6 +18,7 @@ class Product(BaseModel):
     name: str
     safety_level: Optional[float] = Field(default=None)
     stock_level: Optional[float] = Field(default=None)
+    production_time_unit: Optional[float] = Field(default=None)
 
 
 class ProductsDB(BaseModel):

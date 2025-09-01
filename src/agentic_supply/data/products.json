@@ -2,27 +2,33 @@
     "products": [
         {
             "name": "PURAC_FCC",
-            "safety_level": 92
+            "safety_level": 92,
+            "production_time_unit": 2
         },
         {
             "name": "PURASAL",
-            "safety_level": 85
+            "safety_level": 85,
+            "production_time_unit": 4
         },
         {
             "name": "GLUCONAL",
-            "safety_level": 78
+            "safety_level": 78,
+            "production_time_unit": 1
         },
         {
             "name": "Verdad",
-            "safety_level": 88
+            "safety_level": 88,
+            "production_time_unit": 2
         },
         {
             "name": "origin_powder_R02",
-            "safety_level": 73
+            "safety_level": 73,
+            "production_time_unit": 5
         },
         {
             "name": "origin_powder_AC34",
-            "safety_level": 69
+            "safety_level": 69,
+            "production_time_unit": 6
         }
     ]
 }

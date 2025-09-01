@@ -10,18 +10,20 @@ from pydantic import BaseModel, Field
 
 from agentic_supply.utilities.log_utils import set_logging, get_logger
 from agentic_supply.utilities.config import PRODUCT_NAMES, DESTINATIONS, ARTIFACTS_DIR
+from agentic_supply.inventory_assistant.stock_monitoring import get_products_db
 
 
 set_logging()
 logger = get_logger(__name__)
 
 
-PRODUCT_TO_TIME: Dict[PRODUCT_NAMES, float] = {"lactic_acid": 10.0, "ascorbic_acid": 5.0}
 ORDER_DB_PATH = os.path.join(ARTIFACTS_DIR, "order_db.json")
 
 
 class Order(BaseModel):
-    product_name: PRODUCT_NAMES
+    product_name: str
+    site_name: str
+    quantity: float
     destination: DESTINATIONS
     required_delivery_date: str
     scheduled: bool = Field(default=False)
@@ -35,8 +37,13 @@ class Order(BaseModel):
         order_db = get_order_db()
         order_db.add_order(self)
 
+    def get_completion_duration(self) -> float:
+        products_db = get_products_db()
+        product = products_db.get_product(self.product_name)
+        return product.production_time_unit * self.quantity
+
     def verify_completion_status(self) -> Tuple[bool, float]:
-        completion_duration = PRODUCT_TO_TIME[self.product_name]
+        completion_duration = self.get_completion_duration()
         elapsed_time = time.time() - self.schedule_time
         status = "complete" if elapsed_time >= completion_duration else "incomplete"
         remaining_time = max(0, completion_duration - elapsed_time)

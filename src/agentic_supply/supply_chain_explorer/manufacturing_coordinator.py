@@ -40,11 +40,20 @@ class ManufacturingScheduler(CodedTool):
         """
 
         product_name: PRODUCT_NAMES = args.get("product_name")
-        destination: PRODUCT_NAMES = args.get("destination")
-        required_delivery_date: PRODUCT_NAMES = args.get("required_delivery_date")
-        order = Order(product_name=product_name, destination=destination, required_delivery_date=required_delivery_date)
+        site_name = args.get("site_name")
+        destination = args.get("destination")
+        required_delivery_date = args.get("required_delivery_date")
+        quantity = args.get("quantity")
+        order = Order(
+            product_name=product_name,
+            destination=destination,
+            required_delivery_date=required_delivery_date,
+            site_name=site_name,
+            quantity=quantity,
+        )
         order.schedule()
-        return f"The order of {product_name} was scheduled with : order_id={order.id}, order_time={order.schedule_time}"
+        completion_duration = order.get_completion_duration()
+        return f"The order of {quantity} {product_name} for {site_name} was scheduled with : order_id={order.id}, order_time={order.schedule_time}. The estimated completion_duration is {completion_duration} seconds."
 
 
 class ManufacturingCompletionVerifier(CodedTool):
@@ -80,9 +89,8 @@ class ManufacturingCompletionVerifier(CodedTool):
         :return: A return value that goes into the chat stream.
         """
 
-        product_name: PRODUCT_NAMES = args.get("product_name")
         order_id = args.get("order_id")
         order_db = get_order_db()
         order = order_db.get_order(order_id)
         status, remaining_time = order.verify_completion_status()
-        return f"The order of {product_name} ({order_id}) is {status} {'' if status == 'complete' else f'({remaining_time} seconds left)'}"
+        return f"The order of {order.product_name} in {order.site_name} ({order_id}) is {status} {'' if status == 'complete' else f'({remaining_time} seconds left)'}"
