@@ -2,10 +2,10 @@ from typing import Any, Dict
 from neuro_san.interfaces.coded_tool import CodedTool
 
 
-from agentic_supply.carrier_assistant.transit_querying import get_land_routes_db
+from agentic_supply.carrier_assistant.transit_querying import get_ocean_routes_db
 
 
-class LandRoutesPlanner(CodedTool):
+class OceanRoutesPlanner(CodedTool):
     """
     CodedTool implementation of a calculator for the math_guy test.
 
@@ -38,9 +38,8 @@ class LandRoutesPlanner(CodedTool):
         :return: A return value that goes into the chat stream.
         """
 
-        origin = args.get("origin")
-        destination = args.get("destination")
-        transport_mode = args.get("transport_mode")
-        land_routes_db = get_land_routes_db()
-        routes = land_routes_db.get_routes(origin, destination, transport_mode)
+        origin = args.get("start_port")  # origin is causing an issue, the tool is passed other data than the clearly prompted data
+        destination = args.get("destination_port")
+        ocean_routes_db = get_ocean_routes_db()
+        routes = ocean_routes_db.get_routes(origin, destination)
         return str(routes)

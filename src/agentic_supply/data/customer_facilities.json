@@ -1,0 +1,13 @@
+{
+    "customer_facilities": [
+        {
+            "customer": "Henkel",
+            "facility": "Henkel Facility",
+            "country": "Germany",
+            "coordinates": [
+                51.17314617997732,
+                6.839302528863228
+            ]
+        }
+    ]
+}

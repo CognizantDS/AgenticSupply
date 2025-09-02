@@ -2,10 +2,12 @@ from typing import Any, Dict
 from neuro_san.interfaces.coded_tool import CodedTool
 
 
-from agentic_supply.carrier_assistant.transit_querying import get_ocean_routes_db
+from agentic_supply.carrier_assistant.shipment_routing import get_shipments_db, Shipment, ShipmentRoute
+from agentic_supply.carrier_assistant.transit_querying import get_land_routes_db, get_ocean_routes_db
+from agentic_supply.utilities.config import PRODUCT_NAMES
 
 
-class OceanRoutesPlanner(CodedTool):
+class ShipmentPlanner(CodedTool):
     """
     CodedTool implementation of a calculator for the math_guy test.
 
@@ -37,9 +39,17 @@ class OceanRoutesPlanner(CodedTool):
                 adding the data is not invoke()-ed more than once.
         :return: A return value that goes into the chat stream.
         """
+        manufacturing_order_id = args.get("manufacturing_order_id")
+        land_routes_ids: str = args.get("land_routes_ids")
+        ocean_routes_ids: str = args.get("ocean_routes_ids")
 
-        origin = args.get("origin")
-        destination = args.get("destination")
+        land_routes_db = get_land_routes_db()
         ocean_routes_db = get_ocean_routes_db()
-        routes = ocean_routes_db.get_routes(origin, destination)
-        return str(routes)
+        land_routes = [land_routes_db.get_route(id=elem.strip()) for elem in land_routes_ids.split(",")]
+        ocean_routes = [ocean_routes_db.get_route(id=elem.strip()) for elem in ocean_routes_ids.split(",")]
+
+        shipment = Shipment(
+            manufacturing_order_id=manufacturing_order_id, shipment_route=ShipmentRoute(land_routes=land_routes, ocean_routes=ocean_routes)
+        )
+        shipment.place()
+        return str(shipment)

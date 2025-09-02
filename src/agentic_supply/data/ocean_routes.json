@@ -1,8 +1,9 @@
 {
     "ocean_routes": [
         {
-            "origin": "Laem Chabang",
-            "destination": "Rotterdam",
+            "id": "1",
+            "origin": "Laem Chabang Port",
+            "destination": "Rotterdam Port",
             "carrier": "Maersk",
             "transit_time_days": 24,
             "cost_usd": 1500,
@@ -14,8 +15,9 @@
             "scenario": "fastest"
         },
         {
-            "origin": "Laem Chabang",
-            "destination": "Rotterdam",
+            "id": "2",
+            "origin": "Laem Chabang Port",
+            "destination": "Rotterdam Port",
             "carrier": "COSCO",
             "transit_time_days": 32,
             "cost_usd": 1000,
@@ -27,8 +29,9 @@
             "scenario": "cheapest"
         },
         {
-            "origin": "Laem Chabang",
-            "destination": "Rotterdam",
+            "id": "3",
+            "origin": "Laem Chabang Port",
+            "destination": "Rotterdam Port",
             "carrier": "MSC",
             "transit_time_days": 28,
             "cost_usd": 1200,

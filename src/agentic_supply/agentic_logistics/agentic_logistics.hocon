@@ -77,15 +77,19 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
 
             "instructions": """
             You are an agentic network that represent Corbion's logistics ecosystem and that can help users in the typical flow of : 
-            1. Monitor stocks of products across our sites (for this, delegate to stock_agent)
-            2. Schedule manufacturing orders for given products at given sites (for this, delegate to stock_agent)
-            3. Plan and carry out logistics for delivering orders (for this, delegate to logistics_agent)
-            4. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
+            1. Monitoring stocks of products across our sites (for this, delegate to stock_agent)
+            2. Scheduling manufacturing orders for given products at given sites (for this, delegate to stock_agent)
+            3. Planning logistics and scheduling shipments (for this, delegate to logistics_agent ; the only required inputs to start the process are the manufacturing site name, the customer facility)
+            4. Assessing issues impacting shipment delivery, and re-route if needed (for this, delegate to logistics_agent)
+            5. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
             
             Always be proactive :
             - This is a step-wise procedure, thus finish your response by prompting the user to carry out the next step. 
             - Use the querier tools to gather data on products, sites and routes before requesting the user to provide more information. 
             - Infer data if not explicitly mentioned by the user, and then ask for confirmation (instead of asking for exact data, for e.g. tool calling).
+
+            Additionally, users can directly request data (e.g. products, ocean routes, etc) : in that case, directly use the correct tools to retrieve and show this data.
+            When applicable, show the relevant data (e.g. showing the data on stock and safety levels for the inventory check).
             {aaosa_instructions}
             When interacting with the user, act as the single point of interaction. No need to mention the other tools or agents.
             If there are any requirements that need user input, ask them one at a time, with clear examples of the choices available.
@@ -128,13 +132,15 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             "name": "stock_agent",
             "function": "aaosa_call",
             "instructions": """
-            You are responsible for monitoring stock levels and scheduling manufacturing orders at all Corbion facilities and distribution hubs. 
-            Delegate to the inventory_agent tool for queries regarding monitoring product stock levels, products and sites data.
+            You are responsible for monitoring stock levels and scheduling manufacturing orders at all Corbion facilities and distribution hubs.
+            Delegate to the inventory_agent tool for queries regarding inventory, monitoring product stock levels, products and sites data.
             Delegate to the manufacturing_agent for queries regarding scheduling and verifying the status of manufacturing orders.
+            
             {aaosa_instructions}
             """,
             "command": "aaosa_command",
-            "tools": ["inventory_agent", "procurement_agent", "manufacturing_agent"]
+            "tools": ["inventory_agent", "manufacturing_agent"]
+            # "procurement_agent", 
         },
             # SUB-AGENTS
             {
@@ -143,6 +149,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 "instructions": """
                 You are responsible for monitoring stock levels at all Corbion facilities and distribution hubs. 
                 Your goal is to maintain optimal inventory, triggering replenishment or production orders when stock falls below dynamic thresholds. 
+                When asked for an inventory check, monitor the replenishment need but also query and return the relevant data (safety and stock levels for the product).
                 Use the products_querier tool to obtain the products data across all sites (includes safety level and production time).
                 Use the sites_querier tool to obtain the sites data and the products they manufacture.
                 Use the inventory_monitor tool to verify whether a product needs to be replenished at a specific site, or at any site.
@@ -185,28 +192,95 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             You are responsible for handling all inquiries relating to logistical tasks for Corbion.
             Your primary objective is to ensure on-time, in-full delivery at the lowest possible total cost, while managing risk. 
             You act as the coordinator for a team of specialized sub-agents.
-            Upon request from the user, plan routes completely from start to end location using your tools.
-            Infer the precise locations from the user, do not ask specific names of locations, present the user with the best complete land and ocean routes you can infer.
+            Always use the hub_agent to place a shipment, so that the shipment can be created and stored in the database.
+            
+            You can expect the following user requests, for which you must follow exactly this flow :
+            I - Planning shipment routes from a manufacturing site to a customer facility :
+            1. Use the route_planning_agent to obtain a final route for the user to choose. Show the land and ocean route ids.
+            2. Upon user confirmation, use the hub_agent to place the shipment : only the land and ocean route ids and manufacturing order ids are needed.
+            
+            II - Assess shipment issues :
+            1. Use the port_agent tool to monitor ports for any issues, identify and return the impacted shipments.
+            2. If there are impacted shipments, use ocean_carrier_agent to get all the ocean routes and propose rerouting options to the user.
+            3. Upon user confirmation, use the hub_agent to place the shipment rerouting and return shipment details.   
 
-            Use ocean_carrier_agent for carrying out logistics planning regarding port to port transportation.
-            Use land_carrier_agent for carrying out logistics planning regarding land to land transportation.
-            Use the port_agent tool to get ports data and to monitor ports for any issues.
+            Always be proactive :
+            - This two requests are step-wise procedures, thus finish your response by prompting the user to carry out the next step. 
+            - Use the querier tools to gather data on products, sites and routes before requesting the user to provide more information. 
+            - Infer data if not explicitly mentioned by the user, and then ask for confirmation (instead of asking for exact data, for e.g. tool calling).         
+            
             {aaosa_instructions}
             """,
             "command": "aaosa_command",
-            "tools": ["land_carrier_agent", "ocean_carrier_agent", "hub_agent", "port_agent"]
+            "tools": ["route_planning_agent", "hub_agent", "port_agent"]
         },
             # SUB-AGENTS
             {
+                "name": "route_planning_agent",
+                "function": "aaosa_call",
+                # You represent a specific trucking or rail company. You receive transport tasks, provide ETAs, and transmit real-time location data for ground-based movements.
+                "instructions": """
+                You are responsible for planning shipment routes from a manufacturing site to a customer facility.
+                Do NOT ask the user for details on the routes, use your tools to get the needed data : the user only know about the manufacturing site name, the customer facility.
+                Do NOT ask for user inputs besides manufacturing site name and the customer facility.
+                
+                Upon receiving a route planning request, directly infer maximum 3 route options. 
+                Each option must include these 3 legs : 
+                1. manufacturing site to port (land route)
+                2. Port to port (ocean route)
+                3. Port to customer facility (land route)
+
+                To generate these 3 options :
+                1. Use land_carrier_agent to get all the land routes starting from the given manufacturing site ('origin_location') to any location.
+                2. Use land_carrier_agent to get all the land routes ending at the given customer facility ('destination_location') from any location.
+                3. Use ocean_carrier_agent to get all the ocean routes. Prompt the user to select one.
+                4. From this data, directly infer maximum 3 options. 
+                
+                Return the 3 options, and prompt the user to select one.
+                
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                "tools": ["ocean_carrier_agent", "land_carrier_agent"]
+            },
+            {
                 "name": "land_carrier_agent",
                 "function": "aaosa_call",
+                # You represent a specific trucking or rail company. You receive transport tasks, provide ETAs, and transmit real-time location data for ground-based movements.
                 "instructions": """
-                You represent a specific trucking or rail company. 
-                You receive transport tasks, provide ETAs, and transmit real-time location data for ground-based movements.
+                You are responsible for planning land routes from manufacturing sites to ports, and from ports to customer facilities.
+                Use the land_routes_planner to obtain several routes options, optionally pass an origin_location and destination_location to obtain filtered results.
+                
                 {aaosa_instructions}
                 """,
                 "command": "aaosa_command",
                 "tools": ["land_routes_planner"]
+            },
+            {
+                "name": "ocean_carrier_agent",
+                "function": "aaosa_call",
+                # You represent a specific shipping line (e.g., Maersk, MSC).
+                "instructions": """
+                You are responsible for planning ocean routes (port to port).
+                You provide vessel schedules, booking confirmations, container tracking data (GPS), and you alert for at-sea delays. 
+                Use the ocean_routes_planner tool to obtain several routes options, optionally pass an start_port and destination_port to obtain filtered results, when asked for all routes do not pass any start_port nor destination_port.
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                "tools": ["ocean_routes_planner"]
+            },
+            {
+                "name": "hub_agent",
+                "function": "aaosa_call",
+                # You are responsible for managing operations at a regional distribution hub. , receiving bulk shipments, performing quality assurance checks, and potentially conducting final-stage processing like remixing or custom packaging before final delivery. 
+                "instructions": """
+                You are responsible to place shipments and for managing shipment operations.
+                Use the shipment_planner tool to place shipment deliveries.
+                Use the shipment_querier tool to gather shipment data.
+                {aaosa_instructions}
+                """,
+                "command": "aaosa_command",
+                "tools": ["shipment_planner", "shipment_querier"]
             },
             {
                 "name": "port_agent",
@@ -221,29 +295,6 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 """,
                 "command": "aaosa_command",
                 "tools": ["ports_querier", "ports_monitor"]
-            },
-            {
-                "name": "ocean_carrier_agent",
-                "function": "aaosa_call",
-                # You represent a specific shipping line (e.g., Maersk, MSC).
-                "instructions": """
-                You provide vessel schedules, booking confirmations, container tracking data (GPS), and you alert for at-sea delays. 
-                Use the ocean_routes_planner tool to provide available routes for an origin port to a destination port.
-                {aaosa_instructions}
-                """,
-                "command": "aaosa_command",
-                "tools": ["ocean_routes_planner"]
-            },
-            {
-                "name": "hub_agent",
-                "function": "aaosa_call",
-                "instructions": """
-                You are responsible for managing operations at a regional distribution hub. 
-                This includes receiving bulk shipments, performing quality assurance checks, and potentially conducting final-stage processing like remixing or custom packaging before final delivery. 
-                {aaosa_instructions}
-                """,
-                "command": "aaosa_command",
-                # "tools": ["Security_agent", "Networking_agent"]
             },
         
         # CODED TOOLS
@@ -336,6 +387,54 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
         },
         ## LOGISTICS
         {
+            "name": "distance_calculator",
+            "function": {
+                "description": "API to calculate the distance between two sets of coordinates. Returns the distance in kilometers.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "coordinates1": {
+                            "type": "string",
+                            "description": "The port of origin."
+                        },
+                        "coordinates2": {
+                            "type": "string",
+                            "description": "The destination port."
+                        },
+                    },
+                    "required": ["origin", "destination"]
+                }
+            },
+            "class": "distance_calculator.DistanceCalculator"
+        },
+        ### Shipment
+        {
+            "name": "shipment_planner",
+            "function": {
+                "description": "API to place a shipment delivery for a given manufacturing order via a given route. Returns the shipment details.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "manufacturing_order_id": {
+                            "type": "string",
+                            "description": "The ID of the manufacturing order for which to place a shipment."
+                        },
+                        "land_routes_ids": {
+                            "type": "string",
+                            "description": "The IDs of the land routes that the shipment will take. Comma separated, e.g. : 1, 2"
+                        },
+                        "ocean_routes_ids": {
+                            "type": "string",
+                            "description": "The IDs of the ocean routes that the shipment will take. Comma separated, e.g. : 1, 2"
+                        },
+                    },
+                    "required": ["manufacturing_order_id", "land_routes_ids", "ocean_routes_ids"]
+                }
+            },
+            "class": "shipment_planner.ShipmentPlanner"
+        },
+        ### Ports
+        {
             "name": "ports_querier",
             "function": {
                 "description": "API to check the generic data on the ports (name, country, coordinates, handling_time_days).",
@@ -349,23 +448,23 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             },
             "class": "ports_monitor.PortsMonitor"
         },
+        ### Routes
         {
             "name": "ocean_routes_planner",
             "function": {
-                "description": "API to get possible ocean routes from an origin port to a destination port. Returns the available ocean routes.",
+                "description": "API to get ocean routes ; can be filtered by specifying origin and/or destination. Returns the available ocean routes.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "origin": {
+                        "start_port": {
                             "type": "string",
                             "description": "The port of origin."
                         },
-                        "destination": {
+                        "destination_port": {
                             "type": "string",
                             "description": "The destination port."
                         },
                     },
-                    "required": ["origin", "destination"]
                 }
             },
             "class": "ocean_routes_planner.OceanRoutesPlanner"
@@ -373,15 +472,15 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
         {
             "name": "land_routes_planner",
             "function": {
-                "description": "API to get possible land routes from an origin to a destination location. Returns the available land routes.",
+                "description": "API to get land routes ; can be filtered by specifying origin_location, destination_location and/or transport_mode. Returns the available land routes.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "origin": {
+                        "origin_location": {
                             "type": "string",
                             "description": "The origin location."
                         },
-                        "destination": {
+                        "destination_location": {
                             "type": "string",
                             "description": "The destination location."
                         },
@@ -390,7 +489,6 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                             "description": "The mode of transportation (one of truck, rail)."
                         },
                     },
-                    "required": ["origin", "destination"]
                 }
             },
             "class": "land_routes_planner.LandRoutesPlanner"

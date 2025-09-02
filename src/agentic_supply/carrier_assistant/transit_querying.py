@@ -36,6 +36,7 @@ def get_ports_db():
 
 
 class OceanRoute(BaseModel):
+    id: str
     origin: str
     destination: str
     carrier: str
@@ -49,8 +50,19 @@ class OceanRoute(BaseModel):
 class OceanRoutesDB(BaseModel):
     ocean_routes: List[OceanRoute] = []
 
-    def get_routes(self, origin: str, destination: str) -> Port:
-        return [elem for elem in self.ocean_routes if elem.origin == origin and elem.destination == destination]
+    def get_routes(self, origin: Optional[str] = None, destination: Optional[str] = None) -> List[OceanRoute]:
+        routes = [
+            elem
+            for elem in self.ocean_routes
+            if (origin is None or elem.origin == origin) and (destination is None or elem.destination == destination)
+        ]
+        logger.info(
+            f"Found {len(routes)} ocean routes with origin {'ANY' if origin is None else origin} and destination {'ANY' if destination is None else destination}."
+        )
+        return routes
+
+    def get_route(self, id: str) -> OceanRoute:
+        return next((elem for elem in self.ocean_routes if elem.id == id))
 
 
 def get_ocean_routes_db():
@@ -59,6 +71,7 @@ def get_ocean_routes_db():
 
 
 class LandRoute(BaseModel):
+    id: str
     origin: str
     destination: str
     carrier: str
@@ -76,10 +89,13 @@ class LandRoutesDB(BaseModel):
         return [
             elem
             for elem in self.land_routes
-            if elem.origin == origin
-            and elem.destination == destination
+            if (origin is None or elem.origin == origin)
+            and (destination is None or elem.destination == destination)
             and (transport_mode is None or elem.transport_mode == transport_mode)
         ]
+
+    def get_route(self, id: str) -> OceanRoute:
+        return next((elem for elem in self.land_routes if elem.id == id))
 
 
 def get_land_routes_db():
