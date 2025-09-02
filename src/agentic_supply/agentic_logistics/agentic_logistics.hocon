@@ -80,8 +80,9 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             1. Monitoring stocks of products across our sites (for this, delegate to stock_agent)
             2. Scheduling manufacturing orders for given products at given sites (for this, delegate to stock_agent)
             3. Planning logistics and scheduling shipments (for this, delegate to logistics_agent ; the only required inputs to start the process are the manufacturing site name, the customer facility)
-            4. Assessing issues impacting shipment delivery, and re-route if needed (for this, delegate to logistics_agent)
-            5. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
+            4. Assessing issues impacting shipment delivery (for this, delegate to logistics_agent) ; always return the impacted shipments and ports if any.
+            5. Re-routing shipment deliveries impacted by issues (for this, delegate to logistics_agent)
+            6. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
             
             Always be proactive :
             - This is a step-wise procedure, thus finish your response by prompting the user to carry out the next step. 
@@ -200,9 +201,12 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             2. Upon user confirmation, use the hub_agent to place the shipment : only the land and ocean route ids and manufacturing order ids are needed.
             
             II - Assess shipment issues :
-            1. Use the port_agent tool to monitor ports for any issues, identify and return the impacted shipments.
-            2. If there are impacted shipments, use ocean_carrier_agent to get all the ocean routes and propose rerouting options to the user.
-            3. Upon user confirmation, use the hub_agent to place the shipment rerouting and return shipment details.   
+            1. Use the port_agent tool to monitor ports for any issues
+            2. Identify and return the impacted shipments.
+            
+            III - Reroute shipments :
+            1. Use the route_planning_agent to get all the ocean routes and propose rerouting options to the user.
+            2. Upon user confirmation, use the hub_agent to place the shipment rerouting and return shipment details.   
 
             Always be proactive :
             - This two requests are step-wise procedures, thus finish your response by prompting the user to carry out the next step. 
@@ -291,10 +295,14 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 You manage container check-in, customs documentation, loading/unloading schedules, and you report on port congestion levels. 
                 Use the ports_querier tool to get port data.
                 Use the ports_monitor tool to assess port issues.
+                Use the shipment_querier tool to get current shipments.
+
+                To assess if a shipment is impacted by a port issue, check the shipment data to see if any of the port with issues is mentioned for a shipment.
+                Flag identified shipments as needing rerouting.
                 {aaosa_instructions}
                 """,
                 "command": "aaosa_command",
-                "tools": ["ports_querier", "ports_monitor"]
+                "tools": ["ports_querier", "ports_monitor", "shipment_querier"]
             },
         
         # CODED TOOLS
@@ -432,6 +440,13 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 }
             },
             "class": "shipment_planner.ShipmentPlanner"
+        },
+        {
+            "name": "shipment_querier",
+            "function": {
+                "description": "API to get all current shipments.",
+            },
+            "class": "shipment_planner.ShipmentQuerier"
         },
         ### Ports
         {

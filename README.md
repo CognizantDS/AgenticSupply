@@ -43,8 +43,8 @@ Add a .env file in the ``neuro-san-studio`` directory, with the following conten
 AZURE_OPENAI_ENDPOINT=""
 OPENAI_API_VERSION="2025-01-01-preview"
 OPENAI_API_KEY=""
-AGENT_TOOL_PATH="agentic_supply.supply_chain_explorer" # "../AgenticSupply/src/agentic_supply/supply_chain_explorer"
-AGENT_MANIFEST_FILE="../AgenticSupply/src/agentic_supply/supply_chain_explorer/manifest.hocon"
+AGENT_TOOL_PATH="agentic_supply" # "../AgenticSupply/src/agentic_supply/supply_chain_explorer"
+AGENT_MANIFEST_FILE="../AgenticSupply/src/agentic_supply/agentic_logistics/manifest.hocon"
 ```
 
 ## Running the Neuro-SAN-studio
@@ -58,13 +58,47 @@ It will use AGENT_TOOL_PATH to find the module corresponding to the CodedTool, a
 AGENT_MANIFEST_FILE ensures we load only the network(s) of this package for faster UI loading.  
 
 
-## Info
+## Script
 
-Vanna.ai SQL Agent
- 
-Autogen Studio RCA Agent
- 
-Neuro AI - Agent Recommendation System
- 
-Supply Chain Opt
- 
+1. Inventory and manufacturing (for a product) :
+Can you do an inventory check for the product PURAC_FCC across all our sites please ?
+
+Yes, please proceed to the manufacturing order scheduling.
+
+It is to be manufactured at the Rayong Site, for 20 units, to Germany and by 20th of September 2025.
+
+(Please directly proceed and schedule the order.)
+
+
+
+2. Logistics - Plan a shipment route
+I need to plan a shipment for a manufacturing order, please help me to plan the logistics.
+
+From the manufacturing site "Rayong Site" to the customer facility "Henkel Facility", and for manufacturing order id "afcb40466e744b139c532b2df6186aaf". 
+
+(Yes I confirm that there are no specific preferences, please proceed.)
+OR
+(Yes I confirm, please proceed to shipment route planning.)
+
+(The Henkel Facility is in Germany. Please proceed directly to route generation.)
+
+Great ! Let's use "Option 3: Balanced Scenario".
+
+
+
+3. Logistics - Place a shipment
+I need to place a shipment with the following details :
+manufacturing order id is "afcb40466e744b139c532b2df6186aaf" ;
+land route ids are 1, 2 ; ocean route ids are 1
+
+Yes, I confirm.
+
+
+4. Disaster recovery
+Are there any issues impacting shipment delivery ?
+
+Yes please, propose rerouting options for shipment id 43d5c725b1b144908e10573a6634c543. Please use the data of the shipment to directly propose new routes.
+
+Please place the shipment order for Route ID: 2
+
+Yes I confirm.

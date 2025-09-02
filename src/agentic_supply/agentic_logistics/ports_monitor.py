@@ -41,7 +41,7 @@ class PortsMonitor(CodedTool):
         handling_time_threshold = 3
         report_list = []
         for port in ports_db.ports:
-            if port.name == "Port Klang":
+            if port.name == "Singapore":  # "Port Klang"
                 port.handling_time_days = 5
             if port.handling_time_days > handling_time_threshold:
                 report_list.append(f"Congestion for {port.name}, causing handling time to take {port.handling_time_days} days !")
