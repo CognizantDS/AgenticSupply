@@ -87,24 +87,22 @@ It is to be manufactured at the Rayong Site, for 20 units, to Germany and by 20t
 -> Returns order details  
 
 ### 2. Logistics - Plan a shipment route
-I need to plan a shipment for a manufacturing order, please help me to plan the logistics.  
+I need to plan a shipment for a manufacturing order, please help me to plan the logistics by generating door-to-door routing options.  
 -> Prompts the user for the additional required details of manufacturing site and customer facility.  
   
-From the manufacturing site "Rayong Site" to the customer facility "Henkel Facility", and for manufacturing order id "afcb40466e744b139c532b2df6186aaf".   
+From the manufacturing site "Rayong Site" to the customer facility "Henkel Facility".
 -> Either proceeds directly or asks confirmation   
-NB : Choose an order id existing in order_db.json (or the one you generated during the chat)   
-  
+
 (Yes I confirm, please proceed to shipment route planning.)  
 -> Returns 3 options and prompts the user to choose one.  
-    
-Great ! Let's use "Option 3: Balanced Scenario".   
 
 ### 3. Logistics - Place a shipment
 I need to place a shipment with the following details :  
 manufacturing order id is "afcb40466e744b139c532b2df6186aaf" ; land route ids are 1, 2 ; ocean route ids are 1  
 -> Asks for confirmation  
+NB : Choose an order id existing in order_db.json (or the one you generated during the chat)   
   
-Yes, I confirm.  
+Yes, I confirm. Please proceed to the shipment placement directly. 
 -> Returns shipment details  
 
 ### 4. Disaster recovery
@@ -114,6 +112,12 @@ Are there any issues impacting shipment delivery ?
 Yes please, propose rerouting options for shipment id 43d5c725b1b144908e10573a6634c543. Please use the data of the shipment to directly propose new routes.  
 -> Returns 3 options and prompts the user to choose one.  
   
+(Yes proceed directly to proposing rerouting options)
+
+(Yes please, directly return to me the alternative routes.)
+
+(Please gather the information and directly propose the routes)
+
 Please place the shipment order for Route ID: 2  
 -> Asks for confirmation  
   

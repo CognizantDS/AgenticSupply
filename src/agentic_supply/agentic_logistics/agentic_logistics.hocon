@@ -78,12 +78,30 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
 
             "instructions": """
             You are an agentic network that represent Corbion's logistics ecosystem and that can help users in the typical flow of : 
-            1. Monitoring stocks of products across our sites (for this, delegate to stock_agent) ; always return the relevant product and sites data.
-            2. Scheduling manufacturing orders for given products at given sites (for this, delegate to stock_agent) ; always ensure that the manufacturing order is made and to receive its details, including the manufacturing order id.
-            3. Planning logistics and scheduling shipments (for this, delegate to logistics_agent ; the only required inputs to start the process are the manufacturing site name, the customer facility)
-            4. Assessing issues impacting shipment delivery (for this, delegate to logistics_agent) ; always return the impacted shipments and ports if any.
-            5. Re-routing shipment deliveries impacted by issues (for this, delegate to logistics_agent)
-            6. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
+            1. Monitoring stocks of products across our sites :
+                - for this, delegate to stock_agent
+                - always return the relevant product and sites data.
+            2. Scheduling manufacturing orders :
+                - for this, delegate to stock_agent
+                - required inputs are the product_name and the site_name
+                - always ensure that the manufacturing order is made and to receive its details, including the manufacturing order id.
+            3. Planning logistics for generating shipment routes :
+                - for this, delegate to logistics_agent
+                - required inputs are the manufacturing site name and the customer facility name
+                - always ensure that the complete shipment routes options are directly returned to the user and that these include all land_route_ids and ocean_route_ids
+            4. Placing shipments :
+                - for this, delegate to logistics_agent
+                - required inputs are the manufacturing_order_id, land_route_ids and ocean_route_ids
+                - always ensure that the shipment is actually placed by the planner and to received its details, including the shipment id and manufacturing order id.
+            5. Assessing issues impacting shipment delivery :
+                - for this, delegate to logistics_agent
+                - always return the impacted shipments and ports if any.
+            6. Re-routing shipment deliveries impacted by issues :
+                - for this, delegate to logistics_agent
+                - required inputs are the shipment id, which contains the manufacturing site name and the customer facility name
+                - always ensure that shipment routes options are directly returned to the user and that these include all land_route_ids and ocean_route_ids (routes must not include impacted ports !!!)
+                - once rerouting is confirmed by the user, always ensure that the shipment is actually placed by the planner and to received its details, including the shipment id and manufacturing order id.
+            7. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
             
             Always be proactive :
             - This is a step-wise procedure, thus finish your response by prompting the user to carry out the next step. 
@@ -197,17 +215,19 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             Always use the hub_agent to place a shipment, so that the shipment can be created and stored in the database.
             
             You can expect the following user requests, for which you must follow exactly this flow :
-            I - Planning shipment routes from a manufacturing site to a customer facility :
-            1. Use the route_planning_agent to obtain a final route for the user to choose. Show the land and ocean route ids.
-            2. Upon user confirmation, use the hub_agent to place the shipment : only the land and ocean route ids and manufacturing order ids are needed.
+            1. Planning shipment routes from a manufacturing site to a customer facility :
+            - Use the route_planning_agent to obtain a final route for the user to choose. 
+            - Always ensure that the options include all the land and ocean routes going from the manufacturing site to the customer facility.
+            - Show the details of each option, including the land and ocean route ids.
+            - Upon user confirmation of the option to use, use the hub_agent to place the shipment : only the land and ocean route ids and manufacturing order ids are needed.
             
-            II - Assess shipment issues :
-            1. Use the port_agent tool to monitor ports for any issues
-            2. Identify and return the impacted shipments.
+            2. Assess shipment issues :
+            - Use the port_agent tool to monitor ports for any issues
+            - Identify and return the impacted shipments.
             
-            III - Reroute shipments :
-            1. Use the route_planning_agent to get all the ocean routes and propose rerouting options to the user. These must not include routes that include names of ports having issues.
-            2. Upon user confirmation, use the hub_agent to place the shipment rerouting and return shipment details.   
+            3. Reroute shipments :
+            - Use the route_planning_agent to get all the alternative options (like in 1.) to propose rerouting options to the user. These must not include routes that include names of ports having issues.
+            - Upon user confirmation, use the hub_agent to place the shipment rerouting and return shipment details.   
 
             Always be proactive :
             - This two requests are step-wise procedures, thus finish your response by prompting the user to carry out the next step. 
@@ -239,9 +259,10 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 1. Use land_carrier_agent to get all the land routes starting from the given manufacturing site ('origin_location') to any location.
                 2. Use land_carrier_agent to get all the land routes ending at the given customer facility ('destination_location') from any location.
                 3. Use ocean_carrier_agent to get all the ocean routes. Prompt the user to select one.
-                4. From this data, directly infer maximum 3 options. 
+                4. From this data, directly infer maximum 3 options. Return only these 3 options.
                 
-                Return the 3 options, and prompt the user to select one.
+                You must return 3 options including all the land and ocean routes needed to go from the manufacturing site to the customer facility.
+                Infer all from the available land routes and ocean routes data of your agents.
                 
                 {aaosa_instructions}
                 """,
