@@ -205,7 +205,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             2. Identify and return the impacted shipments.
             
             III - Reroute shipments :
-            1. Use the route_planning_agent to get all the ocean routes and propose rerouting options to the user.
+            1. Use the route_planning_agent to get all the ocean routes and propose rerouting options to the user. These must not include routes that include names of ports having issues.
             2. Upon user confirmation, use the hub_agent to place the shipment rerouting and return shipment details.   
 
             Always be proactive :
