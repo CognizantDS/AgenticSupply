@@ -8,7 +8,8 @@
         "model_name": "azure-gpt-4o", # "azure-gpt-4.1",
         "openai_api_version": "2025-01-01-preview",# "2024-12-01-preview",
         "azure_endpoint": "https://belfiusoai1.openai.azure.com/",
-        "deployment_name": "gpt-4o"
+        "deployment_name": "gpt-4o",
+        "temperature": 0.0
     },
     "commondefs": {
         "replacement_strings": {
@@ -77,8 +78,8 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
 
             "instructions": """
             You are an agentic network that represent Corbion's logistics ecosystem and that can help users in the typical flow of : 
-            1. Monitoring stocks of products across our sites (for this, delegate to stock_agent)
-            2. Scheduling manufacturing orders for given products at given sites (for this, delegate to stock_agent)
+            1. Monitoring stocks of products across our sites (for this, delegate to stock_agent) ; always return the relevant product and sites data.
+            2. Scheduling manufacturing orders for given products at given sites (for this, delegate to stock_agent) ; always ensure that the manufacturing order is made and to receive its details, including the manufacturing order id.
             3. Planning logistics and scheduling shipments (for this, delegate to logistics_agent ; the only required inputs to start the process are the manufacturing site name, the customer facility)
             4. Assessing issues impacting shipment delivery (for this, delegate to logistics_agent) ; always return the impacted shipments and ports if any.
             5. Re-routing shipment deliveries impacted by issues (for this, delegate to logistics_agent)
