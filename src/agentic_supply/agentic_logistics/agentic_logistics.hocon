@@ -91,7 +91,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 - always ensure that the complete shipment routes options are directly returned to the user and that these include all land_route_ids and ocean_route_ids
             4. Placing shipments :
                 - for this, delegate to logistics_agent
-                - required inputs are the manufacturing_order_id, land_route_ids and ocean_route_ids
+                - required inputs are the manufacturing_order_id, land_route_ids and ocean_route_ids ; no other inputs are ever required but these 3.
                 - always ensure that the shipment is actually placed by the planner and to received its details, including the shipment id and manufacturing order id.
             5. Assessing issues impacting shipment delivery :
                 - for this, delegate to logistics_agent
@@ -219,8 +219,11 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             - Use the route_planning_agent to obtain a final route for the user to choose. 
             - Always ensure that the options include all the land and ocean routes going from the manufacturing site to the customer facility.
             - Show the details of each option, including the land and ocean route ids.
-            - Upon user confirmation of the option to use, use the hub_agent to place the shipment : only the land and ocean route ids and manufacturing order ids are needed.
             
+            2. Placing shipments :
+            - Use the hub_agent to place the shipment : only the land and ocean route ids and manufacturing order ids are needed.
+            - Show the shipment details
+
             2. Assess shipment issues :
             - Use the port_agent tool to monitor ports for any issues
             - Identify and return the impacted shipments.

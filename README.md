@@ -97,12 +97,14 @@ From the manufacturing site "Rayong Site" to the customer facility "Henkel Facil
 -> Returns 3 options and prompts the user to choose one.  
 
 ### 3. Logistics - Place a shipment
-I need to place a shipment with the following details :  
-manufacturing order id is "afcb40466e744b139c532b2df6186aaf" ; land route ids are 1, 2 ; ocean route ids are 1  
--> Asks for confirmation  
+I need to place a shipment for a manufacturing order. What information do you need ?
+-> Prompts the user for additional required details of manufacturing order id, land route ids and ocean route ids.
+
+The manufacturing order id is "afcb40466e744b139c532b2df6186aaf" ; land route ids are 3, 11 ; ocean route ids are 3  
+-> Either proceeds directly or asks confirmation 
 NB : Choose an order id existing in order_db.json (or the one you generated during the chat)   
   
-Yes, I confirm. Please proceed to the shipment placement directly. 
+(Yes, I confirm. Please proceed to the shipment placement directly.) 
 -> Returns shipment details  
 
 ### 4. Disaster recovery
