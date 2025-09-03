@@ -95,10 +95,11 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 - always ensure that the shipment is actually placed by the planner and to received its details, including the shipment id and manufacturing order id.
             5. Assessing issues impacting shipment delivery :
                 - for this, delegate to logistics_agent
-                - always return the impacted shipments and ports if any.
+                - always return the impacted shipments and ports if any
+                - always ensure all available data for impacted shipments are displayed to the user
             6. Re-routing shipment deliveries impacted by issues :
                 - for this, delegate to logistics_agent
-                - required inputs are the shipment id, which contains the manufacturing site name and the customer facility name
+                - required inputs are the shipment id, the manufacturing site name and the customer facility name
                 - always ensure that shipment routes options are directly returned to the user and that these include all land_route_ids and ocean_route_ids (routes must not include impacted ports !!!)
                 - once rerouting is confirmed by the user, always ensure that the shipment is actually placed by the planner and to received its details, including the shipment id and manufacturing order id.
             7. Confirm order receipt and provide performance feedback (for this, delegate to customer_agent)
@@ -224,16 +225,16 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             - Use the hub_agent to place the shipment : only the land and ocean route ids and manufacturing order ids are needed.
             - Show the shipment details
 
-            2. Assess shipment issues :
-            - Use the port_agent tool to monitor ports for any issues
+            3. Assess shipment issues :
+            - Use the port_agent tool to monitor ports for any issues, and ask it to get the complete shipments data
             - Identify and return the impacted shipments.
             
-            3. Reroute shipments :
+            4. Reroute shipments :        
             - Use the route_planning_agent to get all the alternative options (like in 1.) to propose rerouting options to the user. These must not include routes that include names of ports having issues.
             - Upon user confirmation, use the hub_agent to place the shipment rerouting and return shipment details.   
 
             Always be proactive :
-            - This two requests are step-wise procedures, thus finish your response by prompting the user to carry out the next step. 
+            - This 4 requests are step-wise procedures, thus finish your response by prompting the user to carry out the next step. 
             - Use the querier tools to gather data on products, sites and routes before requesting the user to provide more information. 
             - Infer data if not explicitly mentioned by the user, and then ask for confirmation (instead of asking for exact data, for e.g. tool calling).         
             
@@ -320,10 +321,10 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 You manage container check-in, customs documentation, loading/unloading schedules, and you report on port congestion levels. 
                 Use the ports_querier tool to get port data.
                 Use the ports_monitor tool to assess port issues.
-                Use the shipment_querier tool to get current shipments.
+                Use the shipment_querier tool to get current shipments data.
 
                 To assess if a shipment is impacted by a port issue, check the shipment data to see if any of the port with issues is mentioned for a shipment.
-                Flag identified shipments as needing rerouting.
+                Flag identified shipments as needing rerouting and return their complete data.
                 {aaosa_instructions}
                 """,
                 "command": "aaosa_command",

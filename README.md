@@ -100,7 +100,7 @@ From the manufacturing site "Rayong Site" to the customer facility "Henkel Facil
 I need to place a shipment for a manufacturing order. What information do you need ?
 -> Prompts the user for additional required details of manufacturing order id, land route ids and ocean route ids.
 
-The manufacturing order id is "afcb40466e744b139c532b2df6186aaf" ; land route ids are 3, 11 ; ocean route ids are 3  
+The manufacturing order id is "afcb40466e744b139c532b2df6186aaf" ; land route ids are 2, 12 ; ocean route ids are 1  
 -> Either proceeds directly or asks confirmation 
 NB : Choose an order id existing in order_db.json (or the one you generated during the chat)   
   
@@ -111,16 +111,8 @@ NB : Choose an order id existing in order_db.json (or the one you generated duri
 Are there any issues impacting shipment delivery ?  
 -> Returns an issue for shipments going through Singapore. Prompts the user to reroute the shipment.  
   
-Yes please, propose rerouting options for shipment id 43d5c725b1b144908e10573a6634c543. Please use the data of the shipment to directly propose new routes.  
+Yes please, propose rerouting options for shipment id 441cbc3bc93243c9a4068377b984a279. With origin, the manufacturing site "Rayong Site", and destination, the customer facility "Henkel Facility". 
 -> Returns 3 options and prompts the user to choose one.  
-  
-(Yes proceed directly to proposing rerouting options)
+NB : Choose a shipment id existing in shipment_db.json (or the one you generated during the chat) 
 
 (Yes please, directly return to me the alternative routes.)
-
-(Please gather the information and directly propose the routes)
-
-Please place the shipment order for Route ID: 2  
--> Asks for confirmation  
-  
-Yes I confirm.
