@@ -2,7 +2,7 @@ from typing import Any, Dict
 from neuro_san.interfaces.coded_tool import CodedTool
 import os
 
-from agentic_supply.causality_assistant.causal_graph_generation import CausalGraph
+from agentic_supply.causality_assistant.causal_graph import CausalGraph
 from agentic_supply.utilities.config import DATA_NAMES
 from agentic_supply.utilities.log_utils import set_logging, get_logger
 
@@ -11,7 +11,7 @@ set_logging()
 logger = get_logger(__name__)
 
 
-class CausalGraphFetcher(CodedTool):
+class CausalGraphGenerator(CodedTool):
     """
     CodedTool implementation of a calculator for the math_guy test.
 
@@ -44,14 +44,15 @@ class CausalGraphFetcher(CodedTool):
         :return: A return value that goes into the chat stream.
         """
 
-        data_name: DATA_NAMES = args.get("data_name")
+        data_name: DATA_NAMES = sly_data["data_name"]
+        logger.info(f"data_name from sly_data : {data_name}")
+
         causal_graph = CausalGraph(data_name)
-        sly_data["causal_graph_form"] = causal_graph.form
-        logger.info(f"causal_graph_form stored in sly_data : {sly_data['causal_graph_form']}")
-        return f"The causal graph for {data_name} was fetched, see 'causal_graph_form' sly data"
+        html_path = causal_graph.generate().visualise()
+        return f"The causal graph was generated and visualised, see the newly opened tab ; html_path={html_path}"
 
 
-class CausalGraphVisualiser(CodedTool):
+class CausalGraphRefutator(CodedTool):
     """
     CodedTool implementation of a calculator for the math_guy test.
 
@@ -84,9 +85,9 @@ class CausalGraphVisualiser(CodedTool):
         :return: A return value that goes into the chat stream.
         """
 
-        form = sly_data["causal_graph_form"]
-        logger.info(f"causal_graph_form from sly_data : {form}")
-        causal_graph = CausalGraph(form=form)
-        causal_graph_path, image_filepath_html = causal_graph.generate().visualise()
-        sly_data["causal_graph_path"] = causal_graph_path
-        return f"The causal graph was generated and visualised, see the newly opened tab. causal_graph_path={causal_graph_path}, image_filepath_html={image_filepath_html}"
+        data_name: DATA_NAMES = sly_data["data_name"]
+        logger.info(f"data_name from sly_data : {data_name}")
+
+        causal_graph = CausalGraph(data_name)
+        html_path = causal_graph.generate().refutate()
+        return f"The causal graph refutation report was generated and visualised, see the newly opened tab ; html_path={html_path}"

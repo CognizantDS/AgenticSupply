@@ -9,13 +9,12 @@ import os
 import networkx as nx  # from dowhy.utils import plot
 import matplotlib.pyplot as plt
 import uuid
-import base64
-import pickle
 import webbrowser
 from typing import Dict, List, Tuple, Optional
+from dowhy.gcm.falsify import falsify_graph
 
 from agentic_supply.utilities.config import DATA_NAMES, ARTIFACTS_DIR
-from agentic_supply.utilities.data_utils import write_png_to_html
+from agentic_supply.utilities.data_utils import write_png_to_html, get_data
 from agentic_supply.utilities.log_utils import set_logging, get_logger
 
 
@@ -51,10 +50,11 @@ DATA_TO_GRAPH_FORM: Dict[DATA_NAMES, List[Tuple]] = {
 
 
 class CausalGraph:
-    def __init__(self, data_name: Optional[DATA_NAMES] = None, form: Optional[List[Tuple]] = None):
+    def __init__(self, data_name: DATA_NAMES, form: Optional[List[Tuple]] = None):
         self.data_name: DATA_NAMES = data_name
-        self.form: List[Tuple] = DATA_TO_GRAPH_FORM[data_name] if data_name is not None and form is None else form
+        self.form: List[Tuple] = form if form is not None else DATA_TO_GRAPH_FORM[data_name]
         self.graph: Optional[nx.DiGraph] = None
+        self.id: str = uuid.uuid4().hex
         logger.info(f"Causal graph instanciated with form : {self.form}")
 
     def generate(self) -> "CausalGraph":
@@ -62,15 +62,31 @@ class CausalGraph:
         return self
 
     def visualise(self) -> Tuple[str, str]:
-        image_basename = f"causal_graph_{uuid.uuid4().hex}"
-        image_filepath_png, image_filepath_html, causal_graph_path = (
-            os.path.join(ARTIFACTS_DIR, image_basename + extension) for extension in [".png", ".html", ".pkl"]
+        image_basename = f"causal_graph_{self.id}"
+        nx.draw_networkx(self.graph)
+        html_path = visualise_graph(image_basename, f"Causal Graph for {self.data_name}")
+        return html_path
+
+    def refutate(self):
+        image_basename = f"causal_graph_refutation_{self.id}"
+        png_path = os.path.join(ARTIFACTS_DIR, image_basename + ".png")
+        data = get_data(self.data_name)
+        self.refutation = falsify_graph(
+            self.graph,
+            data,
+            show_progress_bar=True,
+            plot_histogram=True,
+            plot_kwargs={"savepath": png_path, "display": False},
         )
-        with open(causal_graph_path, "wb") as obj_file:
-            pickle.dump(self.graph, obj_file)
-        nx.draw_networkx(self.graph)  # plot(causal_graph)
+        html_path = visualise_graph(image_basename, f"Causal Graph refutation report for {self.data_name}", in_memory=False)
+        return f"Graph is falsifiable: {self.refutation.falsifiable}, Graph is falsified: {self.refutation.falsified} ; image at {html_path} ; \n{repr(self.refutation)}"
+
+
+def visualise_graph(image_basename: str, title=str, in_memory: bool = True):
+    image_filepath_png, image_filepath_html = (os.path.join(ARTIFACTS_DIR, image_basename + extension) for extension in [".png", ".html"])
+    if in_memory:
         plt.savefig(image_filepath_png)
         plt.clf()
-        write_png_to_html(png_path=image_filepath_png, html_path=image_filepath_html, title=f"Causal Graph for {self.data_name}")
-        webbrowser.open_new_tab(f"file://{os.path.abspath(image_filepath_html)}")
-        return (causal_graph_path, image_filepath_html)
+    write_png_to_html(png_path=image_filepath_png, html_path=image_filepath_html, title=title)
+    webbrowser.open_new_tab(f"file://{os.path.abspath(image_filepath_html)}")
+    return image_filepath_html
