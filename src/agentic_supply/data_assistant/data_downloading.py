@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 
 def download_data(data_name: DATA_NAMES, open_file: bool = True) -> str:
-    source = files(data).joinpath(data_name)
+    source = files(data).joinpath(f"{data_name}.csv")
     with as_file(source) as myfile:
         root = tk.Tk()
         root.withdraw()

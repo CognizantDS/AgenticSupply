@@ -44,7 +44,7 @@ AZURE_OPENAI_ENDPOINT=""
 OPENAI_API_VERSION="2025-01-01-preview"
 OPENAI_API_KEY=""
 AGENT_TOOL_PATH="agentic_supply" 
-AGENT_MANIFEST_FILE="../AgenticSupply/src/agentic_supply/agentic_logistics/manifest.hocon"
+AGENT_MANIFEST_FILE="../AgenticSupply/src/agentic_supply/manifest.hocon"
 ```
 
 To get and save orders and shipments, we need to add two more files within the ``neuro-san-studio/logs`` directory :

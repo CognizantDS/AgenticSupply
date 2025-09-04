@@ -10,6 +10,49 @@
         "azure_endpoint": "https://belfiusoai1.openai.azure.com/",
         "deployment_name": "gpt-4o"
     },
+    "commondefs": {
+        "replacement_strings": {
+            "aaosa_instructions": """
+When you receive an inquiry, you will:
+
+    1. Call your tools to determine which down-chain agents in your tools are
+       responsible for all or part of it.
+    2. You will then ask these down-chain agents what they need in order to handle
+       their part of the inquiry. Once the requirements are gathered, you will,
+    3. Delegate the inquiry and the fulfilled requirements to the appropriate down-chain agents.
+    4. Once all down-chain agents respond, you will compile their responses and return the final response.
+
+You may, in turn, be called by other agents in the system and have to act as a down-chain to them.
+            """
+        },
+        "replacement_values": {
+            "aaosa_call": {
+                "description": "Depending on the mode, returns a natural language string in response.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "The inquiry"
+                        },
+                        "mode": {
+                            "type": "string",
+                            "description": """
+indicates whether the agent is being asked to determine if the inquiry belongs to it
+in its entirety or in part. or if it is being asked to provide requirements to fulfill
+the inquiry, if any. or if it is being asked to respond to the inquiry.
+                            """
+                        },
+                    },
+                    "required": [
+                        "inquiry",
+                        "mode"
+                    ]
+                }
+            },
+            "aaosa_command": "Explain if you can respond to all or parts of the inquiry and what you need in order to respond, if anything."
+        },
+    },
     "tools": [
         # This first agent definition is regarded as the "Front Man", which
         # does all the talking to the outside world/client.
@@ -23,82 +66,121 @@
         # call each other is defined within their own specs.
         # This could be a graph, potentially even with cycles.
         {
-            "name": "supply_chain_explorer",
+            "name": "agentic_causality",
             "function": {
 
                 # The description acts as an initial prompt.
                 "description": """
-I am an agent network that can create causal graphs and enable downloading data from a range of datasets.
-Choose your dataset of interest, and prompt me to create a causal graph or to download data and I will generate and share the graph or enable you to download the data.
-""",
+                I am an agent network that can create causal graphs and enable downloading data from a range of datasets.
+                Choose your dataset of interest, and prompt me to create a causal graph or to download data and I will generate and share the graph or enable you to download the data.
+                """,
             },
 
             "instructions": """
-You are an agent network that helps users to perform causal analysis.
-You have access to 3 datasets :
-- example_data
-- supply_chain_medical
-- supply_chain_logistics
+            You are an agent network that helps users to perform causal analysis.
+            You have access to 3 datasets :
+            - example_data
+            - supply_chain_medical
+            - supply_chain_logistics
 
-You must prompt the user to tell you the dataset they wish to select for the duration of the whole chat.
+            Before any further interaction, you must prompt the user to tell you the dataset they wish to select for the duration of the whole chat.
 
-Once selected, you can expect the user to request you to :
-- download the data they selected
-- generate a causal graph for the data they selected
-- fit and evaluate a causal model for the data they selected
+            Once selected, you can expect the user to request you to :
+            - download the data 
+            - generate a causal graph for the data 
+            - fit and evaluate a causal model for the data
 
+            If the user does not mention either of these tasks, explain what you can provide to him and prompt him to choose one of these tasks.
+            Always describe to the user what was done based on the information returned by your agents and tools.
+            Always ensure the requested tasks was correctly performed without any errors.
 
-If the user does not mention either of these tasks, explain what you can provide to him and prompt him to choose one of these tasks.
-
-To generate a causal graph, call the graph_generator tool.
-To enable the user to download and open the supply chain data, call the data_downloader tool ; use its response to let the user know whether the download was successful, and if so, on what selected path it was performed.
-To fit and evaluate a causal model, call the model_fitter_evaluator tool : the user must priorly have requested to generate the causal graph for this tool to work, prompt him to do so if not done so.
-
-All tools must not be ran not more than once per user request.
-All tools include a 'data_name' argument, which refers to the data selected by the user and which must always be passed to the tool Literal['example_data', 'supply_chain_medical', 'supply_chain_logistics']
-""",
+            All tools must not be ran not more than once per user request.
+            All tools include a 'data_name' argument, which refers to the data selected by the user and which must always be passed to the tool Literal['example_data', 'supply_chain_medical', 'supply_chain_logistics']
+            """,
         "allow": {
             "from_downstream": {
                 # Specifying this allows sly_data keys to be ingested from downstream agents
                 # as sly_data for this agent network
-                "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                "sly_data": ["causal_graph_form", "causal_model", "evaluation"]
             },
             "to_upstream": {
                 # Specifying this allows sly_data keys from this network to be passed back
                 # to the calling client
-                "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                "sly_data": ["causal_graph_form", "causal_model", "evaluation"]
             },
             "to_downstream": {
                 # Specifying this allows specific sly_data
                 # keys from this agent network to be sent
                 # to downstream agent networks
-                "sly_data": ["causal_graph_path", "causal_model", "evaluation"]
+                "sly_data": ["causal_graph_form", "causal_model", "evaluation"]
             }
         },
 
-        "tools": ["data_downloader", "graph_generator", "model_fitter_evaluator"]
+        "tools": ["data_agent",  "causality_agent"]
+        },
+        # AGENTS
+        {
+            "name": "data_agent",
+            "function": "aaosa_call",
+            "instructions": """
+            You are responsible for getting the data required for download, visualization and analysis.
+            {aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["data_downloader", "data_fetcher"]
         },
         {
-            "name": "data_downloader",
-            "function": {
-                "description": "Enables the user to download the data_name, automatically opens the file, and returns confirmation of download status with the path selected.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "data_name": {
-                            "type": "string",
-                            "description": "The name of the data to download."
-                        }
-                    },
-                    "required": ["data_name"]
-                }
-            },
-            "class": "data_downloader.DataDownloader"
+            "name": "causality_agent",
+            "function": "aaosa_call",
+            "instructions": """
+            You are responsible for performing a causality analysis for a given data.
+            A causality analysis consists of the following sequential 5 steps :
+            1. Modeling causal relations in a causal graph
+                1.A - Generating a causal graph
+                1.B - Refuting a causal graph
+            2. Modeling graphical causal models
+            {aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["causal_graph_agent"]
+        },
+        # SUB-AGENTS : causal_graph_agent
+        {
+            "name": "causal_graph_agent",
+            "function": "aaosa_call",
+            "instructions": """
+            You are responsible for modeling causal relations in a causal graph.
+            
+            You can perform the following tasks :
+            1.A - Generating a causal graph
+            1.B - Refuting a causal graph
+
+            Background :
+            A causal graph models the causal relations, or “cause-effect-relationships” present in a system or problem domain. 
+            This serves to make each causal assumption explicit. Think e.g. altitude → temperature, i.e. higher altitude causes lower temperature.
+            {aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["graph_generator_agent", "graph_refutator_agent"]
         },
         {
-            "name": "graph_generator",
+            "name": "graph_generator_agent",
+            "function": "aaosa_call",
+            "instructions": """
+            You are responsible for generating causal graphs.
+            If the causal graph information is already present in the system for the given data, you can directly fetch it and then visualise it.
+            Otherwise, you can prompt the user to give some information to build it yourself, and then visualise it.
+            
+            {aaosa_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["causal_graph_fetcher", "causal_graph_builder", "causal_graph_visualiser"]
+        },
+        # CODED TOOLS : causal_graph_agent
+        {
+            "name": "causal_graph_fetcher",
             "function": {
-                "description": "Generates a causal graph for the data_name.",
+                "description": "Fetches an existing causal graph for the data_name. Returns a string that can be passed to the visualiser.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -110,8 +192,35 @@ All tools include a 'data_name' argument, which refers to the data selected by t
                     "required": ["data_name"]
                 }
             },
-            "class": "graph_generator.GraphGenerator"
+            "class": "causal_graph_tools.CausalGraphFetcher"
         },
+        {
+            "name": "causal_graph_visualiser",
+            "function": {
+                "description": "Visualises the causal graph from the available 'causal_graph_form' in the sly data. Opens the visualisation in a new tab, and returns the paths to the graph data.",
+            },
+            "class": "causal_graph_tools.CausalGraphVisualiser"
+        },
+
+        # CODED TOOLS : data_agent
+        {
+            "name": "data_downloader",
+            "function": {
+                "description": "Download the data for the user, for a given data_name : it automatically opens the file in a new tab of the user's webbrowser. Returns the filepath in which the data was downloaded, or warns of cancellation otherwise.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "data_name": {
+                            "type": "string",
+                            "description": "The name of the data to download."
+                        }
+                    },
+                    "required": ["data_name"]
+                }
+            },
+            "class": "data_tools.DataDownloader"
+        },
+        
         {
             "name": "model_fitter_evaluator",
             "function": {

@@ -11,10 +11,17 @@ import matplotlib.pyplot as plt
 import uuid
 import base64
 import pickle
-from typing import Dict, List, Tuple
+import webbrowser
+from typing import Dict, List, Tuple, Optional
 
 from agentic_supply.utilities.config import DATA_NAMES, ARTIFACTS_DIR
 from agentic_supply.utilities.data_utils import write_png_to_html
+from agentic_supply.utilities.log_utils import set_logging, get_logger
+
+
+set_logging()
+logger = get_logger(__name__)
+
 
 DATA_TO_GRAPH_FORM: Dict[DATA_NAMES, List[Tuple]] = {
     "example_data": [("X", "Y"), ("Y", "Z")],
@@ -34,21 +41,36 @@ DATA_TO_GRAPH_FORM: Dict[DATA_NAMES, List[Tuple]] = {
         ("Sub Classification", "Unit Price"),
         ("Molecule/Test Type", "Unit Price"),
     ],
-    "supply_chain_logistics": [("demand", "submitted"), ("constraint", "submitted"), ("submitted", "confirmed"), ("confirmed", "received")],
+    "supply_chain_logistics": [
+        ("demand", "submitted"),
+        ("constraint", "submitted"),
+        ("submitted", "confirmed"),
+        ("confirmed", "received"),
+    ],
 }
 
 
-def generate_causal_graph(data_name: DATA_NAMES) -> Tuple[str, str]:
-    causal_graph = nx.DiGraph(DATA_TO_GRAPH_FORM[data_name])
-    image_basename = f"causal_graph_{uuid.uuid4().hex}"
-    image_filepath_png, image_filepath_html, causal_graph_path = (
-        os.path.join(ARTIFACTS_DIR, image_basename + extension) for extension in [".png", ".html", ".pkl"]
-    )
-    with open(causal_graph_path, "wb") as obj_file:
-        pickle.dump(causal_graph, obj_file)
-    nx.draw_networkx(causal_graph)  # plot(causal_graph)
-    plt.savefig(image_filepath_png)
-    plt.clf()
-    write_png_to_html(png_path=image_filepath_png, html_path=image_filepath_html, title=f"Causal Graph for {data_name}")
+class CausalGraph:
+    def __init__(self, data_name: Optional[DATA_NAMES] = None, form: Optional[List[Tuple]] = None):
+        self.data_name: DATA_NAMES = data_name
+        self.form: List[Tuple] = DATA_TO_GRAPH_FORM[data_name] if data_name is not None and form is None else form
+        self.graph: Optional[nx.DiGraph] = None
+        logger.info(f"Causal graph instanciated with form : {self.form}")
 
-    return (causal_graph_path, image_filepath_html)
+    def generate(self) -> "CausalGraph":
+        self.graph = nx.DiGraph(self.form)
+        return self
+
+    def visualise(self) -> Tuple[str, str]:
+        image_basename = f"causal_graph_{uuid.uuid4().hex}"
+        image_filepath_png, image_filepath_html, causal_graph_path = (
+            os.path.join(ARTIFACTS_DIR, image_basename + extension) for extension in [".png", ".html", ".pkl"]
+        )
+        with open(causal_graph_path, "wb") as obj_file:
+            pickle.dump(self.graph, obj_file)
+        nx.draw_networkx(self.graph)  # plot(causal_graph)
+        plt.savefig(image_filepath_png)
+        plt.clf()
+        write_png_to_html(png_path=image_filepath_png, html_path=image_filepath_html, title=f"Causal Graph for {self.data_name}")
+        webbrowser.open_new_tab(f"file://{os.path.abspath(image_filepath_html)}")
+        return (causal_graph_path, image_filepath_html)

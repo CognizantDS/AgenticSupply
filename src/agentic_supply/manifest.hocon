@@ -11,7 +11,7 @@
 {
     # Currently we list each hocon file we want to serve as a key with a boolean value.
     # Eventually we might have a dictionary value with server specifications for each.
-    "agentic_causality.hocon": true,
-    "agentic_logistics.hocon": true,
+    "agentic_causality/agentic_causality.hocon": true,
+    "agentic_logistics/agentic_logistics.hocon": true,
     
 }
