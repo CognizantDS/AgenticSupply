@@ -33,6 +33,11 @@ DATA_TO_FILE: Dict[DATA_NAMES, List[Tuple]] = {
     "supply_chain_medical": "SCMS_Delivery_History_Dataset.csv",
     "supply_chain_logistics": "supply_chain_week_over_week.csv",
 }
+DATA_TO_TARGET: Dict[DATA_NAMES, List[Tuple]] = {
+    "example_data": "Z",
+    "supply_chain_medical": "",
+    "supply_chain_logistics": "",
+}
 PRODUCT_NAMES = Literal["lactic_acid", "ascorbic_acid"]
 DESTINATIONS = Literal["Germany", "Netherlands", "Belgium", "Denmark"]
 ARTIFACTS_DIR = "./logs"

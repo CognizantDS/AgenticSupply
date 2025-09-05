@@ -1,4 +1,5 @@
 import os
+import pickle
 import pandas as pd
 import base64
 from importlib.resources import files, as_file
@@ -6,6 +7,12 @@ from typing import Optional
 
 from agentic_supply import data
 from agentic_supply.utilities.config import DATA_NAMES, DATA_TO_FILE
+
+
+def save_object(object_: object, filebasename):
+    source = files(data).joinpath(f"{filebasename}.pkl")
+    with open(source, "wb") as out:
+        pickle.dump(object_, out, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def get_data(data_name: DATA_NAMES) -> pd.DataFrame:

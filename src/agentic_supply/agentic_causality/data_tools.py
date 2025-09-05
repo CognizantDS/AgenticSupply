@@ -86,6 +86,6 @@ class DataDownloader(CodedTool):
         data_name: DATA_NAMES = sly_data["data_name"]
         logger.info(f"data_name from sly_data : {data_name}")
 
-        target_path = download_data(data_name)
+        target_path = download_data(data_name=data_name)
         msg = f"CSV saved to: {target_path}" if target_path is not None else "Data download was cancelled."
         return msg

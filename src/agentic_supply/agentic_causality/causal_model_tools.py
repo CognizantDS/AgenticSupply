@@ -3,7 +3,9 @@ from neuro_san.interfaces.coded_tool import CodedTool
 import os
 
 from agentic_supply.causality_assistant.causal_graph import CausalGraph
+from agentic_supply.causality_assistant.causal_analysis import CausalModel
 from agentic_supply.utilities.config import DATA_NAMES
+from agentic_supply.data_assistant.data_downloading import download_data
 from agentic_supply.utilities.log_utils import set_logging, get_logger
 
 
@@ -11,7 +13,7 @@ set_logging()
 logger = get_logger(__name__)
 
 
-class CausalGraphVisualiser(CodedTool):
+class CausalModelEvaluator(CodedTool):
     """
     CodedTool implementation of a calculator for the math_guy test.
 
@@ -48,11 +50,12 @@ class CausalGraphVisualiser(CodedTool):
         logger.info(f"data_name from sly_data : {data_name}")
 
         causal_graph = CausalGraph(data_name)
-        causal_graph.visualise()
-        return "The causal graph was visualised, see the newly opened tab"
+        causal_model = CausalModel(causal_graph)
+        causal_model.fit().evaluate()
+        return f"The model was correctly fitted and evaluated.\n\n\nModel fit report :\n{causal_model.fit_report}\n\n\nModel evaluation report :\n{causal_model.evaluation_report}"
 
 
-class CausalGraphRefutator(CodedTool):
+class CausalModelGenerator(CodedTool):
     """
     CodedTool implementation of a calculator for the math_guy test.
 
@@ -88,6 +91,7 @@ class CausalGraphRefutator(CodedTool):
         data_name: DATA_NAMES = sly_data["data_name"]
         logger.info(f"data_name from sly_data : {data_name}")
 
-        causal_graph = CausalGraph(data_name)
-        refutation = causal_graph.refutate()
-        return f"The causal graph refutation report was correctly generated and visualised, see the newly opened tab for the visualisation.\n\n\nRefutation report :\n{refutation}"
+        causal_model = CausalModel.from_file(data_name)
+        data = causal_model.generate_data()
+        target_path = download_data(df=data)
+        return f"The data was correctly generated and saved at {target_path}"

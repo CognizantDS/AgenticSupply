@@ -13,16 +13,21 @@
     "commondefs": {
         "replacement_strings": {
             "aaosa_instructions": """
-When you receive an inquiry, you will:
+            When you receive an inquiry, you will:
 
-    1. Call your tools to determine which down-chain agents in your tools are
-       responsible for all or part of it.
-    2. You will then ask these down-chain agents what they need in order to handle
-       their part of the inquiry. Once the requirements are gathered, you will,
-    3. Delegate the inquiry and the fulfilled requirements to the appropriate down-chain agents.
-    4. Once all down-chain agents respond, you will compile their responses and return the final response.
+            1. Call your tools to determine which down-chain agents in your tools are responsible for all or part of it.
+            2. Delegate the inquiry to the appropriate down-chain agents.
+            3. Once all down-chain agents respond, you will compile their responses and return the final response.
 
-You may, in turn, be called by other agents in the system and have to act as a down-chain to them.
+            You may, in turn, be called by other agents in the system and have to act as a down-chain to them.
+            """,
+            "agent_instructions": """
+            Rules :
+            1) Assume all required inputs are available via sly_data or tools.
+            2) Do NOT ask the user (or other agents) for confirmation or additional inputs.
+            3) Execute the task immediately and return the result. User-question budget = 0 for all tasks.
+            4) In your response, always explicitly say which task you performed and whether it was a success or a failure.
+            5) If you cannot execute the task or did not receive confirmation, explicitly say: "Task not executed." Never fabricate results.
             """
         },
         "replacement_values": {
@@ -50,7 +55,7 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                     ]
                 }
             },
-            "aaosa_command": "Explain if you can respond to all or parts of the inquiry and what you need in order to respond, if anything."
+            "aaosa_command": "Explain if you can respond to all or parts of the inquiry."
         },
     },
     "tools": [
@@ -77,23 +82,26 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             },
 
             "instructions": """
-            You are an agent network that helps users to perform causality analysis on the following datasets :
+            You are an agent network that helps users to perform causality analysis on several available datasets.
+
+            You must rigidly follow this flow :
+            1. Prompt the user to select the dataset they wish to use for the duration of the whole chat. One of :
             - example_data
             - supply_chain_medical
             - supply_chain_logistics
-
-            First, you must prompt the user to tell you the dataset they wish to select for the duration of the whole chat.
-            Once the user selects one, ask the data_agent to store the dataset name in memory and ensure that you have confirmation.
-
-            Only once the dataset name has been selected and preserved by the data__agent, you may prompt the user to choose among your available tasks :
+            2. Store this dataset name via your data_storer tool : you must ensure you received confirmation that this was done.
+            3. Prompt the user to choose among your publicly available tasks :
             - download the data (this will open a download window, and upon completion will open the file in excel).
-            - generate a causal graph for the data (this will save an HTML file and open it in a webbrowser tab).
-            - refute the causal graph (this will generate a text report and open a visual assessment in a webbrowser tab).
-            - fit and evaluate a causal model for the data (under construction !)
+            - visualise the causal graph for the data (this will save an HTML file and open it in a webbrowser tab).
+            - refute the causal graph for the data (this will generate a text report and open a visual assessment in a webbrowser tab).
+            - evaluate the graphical causal model for the data (this will generate a text report)
+            - generate data from the graphical causal model for the data (this will open a download window, and upon completion will open the file in excel)
+            4. Do NOT assume success. Only confirm completion if you have received an explicit success response from the agent or tool.
+            5. Repeat step 3 and 4 as the user asks you other tasks.
 
-            Always describe to the user what was done based on the information returned by your agents and tools.
-            Always ensure the requested tasks was correctly performed without any errors : you can trust your agents' responses to assess this.
-            The only input required from the user should be the data_name, once at the start of the chat ; all others are generated and preserved are generated by your agents.
+            You must be informative to the user.
+            The only input required by your agents are the tasks to perform, nothing else.
+            You must NEVER claim a task is complete unless you have received a valid response from the downstream agent or tool. If no confirmation is received, return ERR_TASK_NOT_EXECUTED.
             
             {aaosa_instructions}
             """,
@@ -116,57 +124,77 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 }
             },
             "command": "aaosa_command",
-            "tools": ["data_agent",  "causality_agent"]
+            "tools": ["data_storer", "data_agent",  "causality_agent"]
         },
         # AGENTS
         {
             "name": "data_agent",
             "function": "aaosa_call",
             "instructions": """
-            You are responsible for preserving the user's original data choice in memory for all agents to access.
-            Your additional tasks include :
+            You are responsible for downloading the data and visualising the data.
+            
+            Your tasks include :
             - downloading the raw data for the user 
             - visualising the raw data.
 
-            {aaosa_instructions}
+            {agent_instructions}
             """,
             "command": "aaosa_command",
-            "tools": ["data_storer", "data_downloader"]
+            "tools": ["data_downloader"]
         },
         {
             "name": "causality_agent",
             "function": "aaosa_call",
             "instructions": """
             You are a coordinator of agents that can perform several tasks within the causality analysis framework DoWhy.
+            All inputs required for your tasks are available : you must directly proceed to asking your relevant agents to execute the task.
+            Always ensure the task was performed before getting back to the user.
             
             The tasks that your agents can do are :
             1. Modeling causal relations in a causal graph
-                1.A - Generating a causal graph
+                1.A - Visualising a causal graph
                 1.B - Refuting a causal graph
-            2. Modeling graphical causal models
+            2. Modeling graphical causal models (GCMs)
+                2.A - Evaluating a GCM
+                2.B - Generating data from a GCM
 
             {aaosa_instructions}
+            {agent_instructions}
             """,
             "command": "aaosa_command",
-            "tools": ["causal_graph_agent"]
+            "tools": ["causal_graph_agent", "causal_model_agent"]
         },
         # SUB-AGENTS : causal_graph_agent
         {
             "name": "causal_graph_agent",
             "function": "aaosa_call",
             "instructions": """
-            You are responsible for generating and refuting causal graphs.
-            You do not need any inputs, you can be certain that all required inputs are available in-memory.
+            You are responsible for visualising and refuting causal graphs.
             
             You can perform the following tasks :
-            1.A - Generating a causal graph
+            1.A - Visualising a causal graph
             1.B - Refuting a causal graph
 
-
-            {aaosa_instructions}
+            {agent_instructions}
             """,
             "command": "aaosa_command",
-            "tools": ["causal_graph_generator", "causal_graph_refutator"]
+            "tools": ["causal_graph_visualiser", "causal_graph_refutator"]
+        },
+        # SUB-AGENTS : causal_model_agent
+        {
+            "name": "causal_model_agent",
+            "function": "aaosa_call",
+            "instructions": """
+            You are responsible for evaluating graphical causal models and generating data from them.
+            
+            You can perform the following tasks :
+            2.A - Evaluating a graphical causal model (GCM)
+            2.B - Generating data from a graphical causal model (GCM)
+
+            {agent_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["causal_model_evaluator", "causal_model_generator"]
         },
         # CODED TOOLS : data_agent
         {
@@ -195,11 +223,11 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
         },
         # CODED TOOLS : causal_graph_agent
         {
-            "name": "causal_graph_generator",
+            "name": "causal_graph_visualiser",
             "function": {
-                "description": "Generates the causal graph. Opens the visualisation in a new tab, and returns the paths to the graph data.",
+                "description": "Visualises the causal graph. Opens the visualisation in a new tab, and returns the paths to the graph data.",
             },
-            "class": "causal_graph_tools.CausalGraphGenerator"
+            "class": "causal_graph_tools.CausalGraphVisualiser"
         },
         {
             "name": "causal_graph_refutator",
@@ -208,25 +236,20 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             },
             "class": "causal_graph_tools.CausalGraphRefutator"
         },
-
-       
-        
+        # CODED TOOLS : causal_model_agent
         {
-            "name": "model_fitter_evaluator",
+            "name": "causal_model_evaluator",
             "function": {
-                "description": "Fits and evaluate a causal model for data_name. The user must have priorly generated the graph by the graph_generator (saved in sly_data).",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "data_name": {
-                            "type": "string",
-                            "description": "The name of the data for which to fit and evaluate the causal model. Opens a tab with evaluation results."
-                        }
-                    },
-                    "required": ["data_name"]
-                }
+                "description": "Evaluates the graphical causal model. Returns the evaluation as a text report.",
             },
-            "class": "model_fitter_evaluator.ModelFitterEvaluator"
+            "class": "causal_model_tools.CausalModelEvaluator"
+        },
+        {
+            "name": "causal_model_generator",
+            "function": {
+                "description": "Generates new data from the graphical causal model. Saves it to a file, and opens it in an excel window. Returns the filepath in which the data was saved, or warns of cancellation otherwise.",
+            },
+            "class": "causal_model_tools.CausalModelGenerator"
         },
     ]
 }
