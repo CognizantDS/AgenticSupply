@@ -3,7 +3,7 @@ from neuro_san.interfaces.coded_tool import CodedTool
 import os
 
 from agentic_supply.causality_assistant.causal_graph import CausalGraph
-from agentic_supply.causality_assistant.causal_analysis import CausalModel
+from agentic_supply.causality_assistant.causal_analysis import CausalAnalysis
 from agentic_supply.utilities.config import DATA_NAMES
 from agentic_supply.data_assistant.data_downloading import download_data
 from agentic_supply.utilities.log_utils import set_logging, get_logger
@@ -50,9 +50,9 @@ class CausalModelEvaluator(CodedTool):
         logger.info(f"data_name from sly_data : {data_name}")
 
         causal_graph = CausalGraph(data_name)
-        causal_model = CausalModel(causal_graph)
-        causal_model.fit().evaluate()
-        return f"The model was correctly fitted and evaluated.\n\n\nModel fit report :\n{causal_model.fit_report}\n\n\nModel evaluation report :\n{causal_model.evaluation_report}"
+        causal_analysis = CausalAnalysis(causal_graph)
+        causal_analysis.fit().evaluate()
+        return f"The model was correctly fitted and evaluated.\n\n\nModel fit report :\n{causal_analysis.fit_report}\n\n\nModel evaluation report :\n{causal_analysis.evaluation_report}"
 
 
 class CausalModelGenerator(CodedTool):
@@ -91,7 +91,7 @@ class CausalModelGenerator(CodedTool):
         data_name: DATA_NAMES = sly_data["data_name"]
         logger.info(f"data_name from sly_data : {data_name}")
 
-        causal_model = CausalModel.from_file(data_name)
-        data = causal_model.generate_data()
+        causal_analysis = CausalAnalysis.from_file(data_name)
+        data = causal_analysis.generate_data()
         target_path = download_data(df=data)
         return f"The data was correctly generated and saved at {target_path}"

@@ -7,14 +7,13 @@ References :
 
 import os
 import networkx as nx  # from dowhy.utils import plot
-import matplotlib.pyplot as plt
 import uuid
-import webbrowser
+
 from typing import Dict, List, Tuple, Optional
 from dowhy.gcm.falsify import falsify_graph, EvaluationResult
 
 from agentic_supply.utilities.config import DATA_NAMES, ARTIFACTS_DIR
-from agentic_supply.utilities.data_utils import write_png_to_html, get_data
+from agentic_supply.utilities.data_utils import get_data, visualise_graph
 from agentic_supply.utilities.log_utils import set_logging, get_logger
 
 
@@ -24,6 +23,21 @@ logger = get_logger(__name__)
 
 DATA_TO_GRAPH_FORM: Dict[DATA_NAMES, List[Tuple]] = {
     "example_data": [("X", "Y"), ("Y", "Z")],
+    "online_shop_data": [
+        ("Page Views", "Sold Units"),
+        ("Revenue", "Profit"),
+        ("Unit Price", "Sold Units"),
+        ("Unit Price", "Revenue"),
+        ("Shopping Event?", "Page Views"),
+        ("Shopping Event?", "Sold Units"),
+        ("Shopping Event?", "Unit Price"),
+        ("Shopping Event?", "Ad Spend"),
+        ("Ad Spend", "Page Views"),
+        ("Ad Spend", "Operational Cost"),
+        ("Sold Units", "Revenue"),
+        ("Sold Units", "Operational Cost"),
+        ("Operational Cost", "Profit"),
+    ],
     "supply_chain_medical": [
         ("Country", "Managed By"),
         ("Managed By", "Fulfill Via"),
@@ -55,7 +69,7 @@ class CausalGraph:
 
     Examples :
     >>> from agentic_supply.causality_assistant.causal_graph import CausalGraph
-    >>> causal_graph = CausalGraph("example_data")
+    >>> causal_graph = CausalGraph("example_data") # online_shop_data
     """
 
     def __init__(self, data_name: DATA_NAMES, form: Optional[List[Tuple]] = None):
@@ -95,12 +109,3 @@ class CausalGraph:
         visualise_graph(image_basename, f"Causal Graph refutation report for {self.data_name}", in_memory=False)
         self.refutation_report = f"Graph is falsifiable: {self.refutation.falsifiable}, Graph is falsified: {self.refutation.falsified}\n\n{repr(self.refutation)}"
         return self
-
-
-def visualise_graph(image_basename: str, title=str, in_memory: bool = True):
-    image_filepath_png, image_filepath_html = (os.path.join(ARTIFACTS_DIR, image_basename + extension) for extension in [".png", ".html"])
-    if in_memory:
-        plt.savefig(image_filepath_png)
-        plt.clf()
-    write_png_to_html(png_path=image_filepath_png, html_path=image_filepath_html, title=title)
-    webbrowser.open_new_tab(f"file://{os.path.abspath(image_filepath_html)}")

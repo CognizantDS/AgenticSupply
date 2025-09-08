@@ -8,7 +8,9 @@
         "model_name": "azure-gpt-4o", # "azure-gpt-4.1",
         "openai_api_version": "2025-01-01-preview",# "2024-12-01-preview",
         "azure_endpoint": "https://belfiusoai1.openai.azure.com/",
-        "deployment_name": "gpt-4o"
+        "deployment_name": "gpt-4o",
+        "max_execution_seconds": 600,
+        "max_iterations": 2000
     },
     "commondefs": {
         "replacement_strings": {
@@ -87,15 +89,19 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             You must rigidly follow this flow :
             1. Prompt the user to select the dataset they wish to use for the duration of the whole chat. One of :
             - example_data
+            - online_shope_data
             - supply_chain_medical
             - supply_chain_logistics
             2. Store this dataset name via your data_storer tool : you must ensure you received confirmation that this was done.
-            3. Prompt the user to choose among your publicly available tasks :
+            3. Prompt the user to choose among your publicly available tasks, which will all be performed onthe stored dataset name :
             - download the data (this will open a download window, and upon completion will open the file in excel).
-            - visualise the causal graph for the data (this will save an HTML file and open it in a webbrowser tab).
-            - refute the causal graph for the data (this will generate a text report and open a visual assessment in a webbrowser tab).
-            - evaluate the graphical causal model for the data (this will generate a text report)
-            - generate data from the graphical causal model for the data (this will open a download window, and upon completion will open the file in excel)
+            - visualise the causal graph (this will save an HTML file and open it in a webbrowser tab).
+            - refute the causal graph (this will generate a text report and open a visual assessment in a webbrowser tab).
+            - evaluate the graphical causal model (this will generate a text report)
+            - generate data from the graphical causal model (this will open a download window, and upon completion will open the file in excel)
+            - quantify causal influence, via the intrinsic or the arrow strength mode (this will return numeric data to display)
+            - perform root cause analysis, via the anomaly attribution, the distribution change attribution or the feature importance mode (this will return numeric data to display, along with a text interpretation).
+            - answer causal what-if questions, via the intervention or counterfactual mode (this will return a dataframe representic the answer to the question)
             4. Do NOT assume success. Only confirm completion if you have received an explicit success response from the agent or tool.
             5. Repeat step 3 and 4 as the user asks you other tasks.
 
@@ -157,12 +163,23 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             2. Modeling graphical causal models (GCMs)
                 2.A - Evaluating a GCM
                 2.B - Generating data from a GCM
+            3. Performing causal tasks
+                3.A - Quantifying causal influence
+                    3.A.i - Quantifying intrinsic causal influence
+                    3.A.ii - Quantifying arrow strength
+                3.B - Performing root cause analysis
+                    3.B.i - Attributing anomaly
+                    3.B.ii - Attributing distribution changes
+                    3.B.iii - Computing feature relevance
+                3.C - Answering causal what-if questions
+                    3.C.i - Simulating intervention impact
+                    3.C.ii - Computing counterfactuals
 
             {aaosa_instructions}
             {agent_instructions}
             """,
             "command": "aaosa_command",
-            "tools": ["causal_graph_agent", "causal_model_agent"]
+            "tools": ["causal_graph_agent", "causal_model_agent", "causal_task_agent"]
         },
         # SUB-AGENTS : causal_graph_agent
         {
@@ -172,8 +189,9 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             You are responsible for visualising and refuting causal graphs.
             
             You can perform the following tasks :
-            1.A - Visualising a causal graph
-            1.B - Refuting a causal graph
+            1. Modeling causal relations in a causal graph
+                1.A - Visualising a causal graph
+                1.B - Refuting a causal graph
 
             {agent_instructions}
             """,
@@ -188,13 +206,37 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             You are responsible for evaluating graphical causal models and generating data from them.
             
             You can perform the following tasks :
-            2.A - Evaluating a graphical causal model (GCM)
-            2.B - Generating data from a graphical causal model (GCM)
+            2. Modeling graphical causal models (GCMs)
+                2.A - Evaluating a GCM
+                2.B - Generating data from a GCM
 
             {agent_instructions}
             """,
             "command": "aaosa_command",
             "tools": ["causal_model_evaluator", "causal_model_generator"]
+        },
+        # SUB-AGENTS : causal_task_agent
+        {
+            "name": "causal_task_agent",
+            "function": "aaosa_call",
+            "instructions": """
+            You are responsible for performing causal tasks, listed below :
+            3. Performing causal tasks
+                3.A - Quantifying causal influence
+                    3.A.i - Quantifying intrinsic causal influence
+                    3.A.ii - Quantifying arrow strength
+                3.B - Performing root cause analysis
+                    3.B.i - Attributing anomaly
+                    3.B.ii - Attributing distribution changes
+                    3.B.iii - Computing feature relevance
+                3.C - Answering causal what-if questions
+                    3.C.i - Simulating intervention impact
+                    3.C.ii - Computing counterfactuals
+
+            {agent_instructions}
+            """,
+            "command": "aaosa_command",
+            "tools": ["causal_influence_quantificator", "root_cause_analyser", "what_if_answerer"]
         },
         # CODED TOOLS : data_agent
         {
@@ -250,6 +292,62 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 "description": "Generates new data from the graphical causal model. Saves it to a file, and opens it in an excel window. Returns the filepath in which the data was saved, or warns of cancellation otherwise.",
             },
             "class": "causal_model_tools.CausalModelGenerator"
+        },
+        # CODED TOOLS : causal_task_agent
+        {
+            "name": "causal_influence_quantificator",
+            "function": {
+                "description": "Quantifies causal influence, either for 'intrinsic' or 'arrow' causal_influence_type.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "causal_influence_type": {
+                            "type": "string",
+                            "description": "The type of causal influence to quantify, one of 'intrinsic' or 'arrow'."
+                        }
+                    },
+                    "required": ["causal_influence_type"]
+                }
+            },
+            "class": "causal_task_tools.CausalInfluenceQuantificator"
+        },
+        {
+            "name": "root_cause_analyser",
+            "function": {
+                "description": "Analyses root causes, either for 'anomaly_attributon', 'distribution_attribution' or 'feature_relevance' root_cause_type.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "root_cause_type": {
+                            "type": "string",
+                            "description": "The type of root cause to analyse, one of 'anomaly_attributon', 'distribution_attribution' or 'feature_relevance'."
+                        },
+                    },
+                    "required": ["root_cause_type"]
+                }
+            },
+            "class": "causal_task_tools.RootCauseAnalyser"
+        },
+        {
+            "name": "what_if_answerer",
+            "function": {
+                "description": "Answers what-if questions, either for 'intervention' or 'counterfactual' what_if_question_type.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "what_if_question_type": {
+                            "type": "string",
+                            "description": "The type of what-if question to answer, one of 'intervention' or 'counterfactual'."
+                        },
+                        "node": {
+                            "type": "string",
+                            "description": "The node for which to answer the what-if question."
+                        },
+                    },
+                    "required": ["question_type", "node"]
+                }
+            },
+            "class": "causal_task_tools.WhatIfAnswerer"
         },
     ]
 }
