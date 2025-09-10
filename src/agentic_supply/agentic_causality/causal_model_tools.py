@@ -50,9 +50,9 @@ class CausalModelEvaluator(CodedTool):
         logger.info(f"data_name from sly_data : {data_name}")
 
         causal_graph = CausalGraph(data_name)
-        causal_analysis = CausalAnalysis(causal_graph)
-        causal_analysis.fit().evaluate()
-        return f"The model was correctly fitted and evaluated.\n\n\nModel fit report :\n{causal_analysis.fit_report}\n\n\nModel evaluation report :\n{causal_analysis.evaluation_report}"
+        causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
+        causal_analysis.evaluate()
+        return f"The model was correctly evaluated.\n\nModel fit report :\n{causal_analysis.fit_report}\n\nModel evaluation report :\n{causal_analysis.evaluation_report}"
 
 
 class CausalModelGenerator(CodedTool):
@@ -91,7 +91,8 @@ class CausalModelGenerator(CodedTool):
         data_name: DATA_NAMES = sly_data["data_name"]
         logger.info(f"data_name from sly_data : {data_name}")
 
-        causal_analysis = CausalAnalysis.from_file(data_name)
+        causal_graph = CausalGraph(data_name)
+        causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
         data = causal_analysis.generate_data()
         target_path = download_data(df=data)
         return f"The data was correctly generated and saved at {target_path}"

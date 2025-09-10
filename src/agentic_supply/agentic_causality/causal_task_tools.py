@@ -4,8 +4,9 @@ import os
 import pandas as pd
 
 from agentic_supply.causality_assistant.causal_analysis import CausalAnalysis
+from agentic_supply.causality_assistant.causal_graph import CausalGraph
 from agentic_supply.utilities.config import DATA_NAMES, CAUSAL_INFLUENCE_TYPES, ROOT_CAUSE_TYPES, WHAT_IF_QUESTION_TYPES
-from agentic_supply.data_assistant.data_downloading import select_target_path
+from agentic_supply.data_assistant.data_downloading import select_target_path, download_data
 from agentic_supply.utilities.log_utils import set_logging, get_logger
 
 
@@ -51,15 +52,17 @@ class CausalInfluenceQuantificator(CodedTool):
         causal_influence_type: CAUSAL_INFLUENCE_TYPES = args.get("causal_influence_type")
         logger.info(f"causal_influence_type from args : {causal_influence_type}")
 
-        causal_analysis = CausalAnalysis.from_file(data_name)
+        causal_graph = CausalGraph(data_name)
+        causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
+
         if causal_influence_type == "arrow":
-            result = causal_analysis.get_arrow_strength()
+            _, _, interpretation = causal_analysis.get_arrow_strength()
         elif causal_influence_type == "intrinsic":
-            result = causal_analysis.get_intrinsic_causal_influence()
+            _, _, interpretation = causal_analysis.get_intrinsic_causal_influence()
         else:
             raise ValueError("invalid causal_influence_type")
 
-        return f"The causal influence was correctly quantified, see the node-wise result :\n{result}"
+        return f"The causal influence was correctly quantified, see the result :\n{interpretation}"
 
 
 class RootCauseAnalyser(CodedTool):
@@ -100,7 +103,8 @@ class RootCauseAnalyser(CodedTool):
         root_cause_type: ROOT_CAUSE_TYPES = args.get("root_cause_type")
         logger.info(f"root_cause_type from args : {root_cause_type}")
 
-        causal_analysis = CausalAnalysis.from_file(data_name)
+        causal_graph = CausalGraph(data_name)
+        causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
 
         if root_cause_type != "feature_relevance":
             data_path = select_target_path("openname")
@@ -108,17 +112,15 @@ class RootCauseAnalyser(CodedTool):
             data_new = pd.read_csv(data_path)
 
         if root_cause_type == "anomaly_attributon":
-            node_contributions, interpretation = causal_analysis.get_anomaly_attribution(anomalous_data=data_new)
+            _, interpretation = causal_analysis.get_anomaly_attribution(anomalous_data=data_new, bootstrap=True)
         elif root_cause_type == "distribution_attribution":
-            node_contributions, interpretation = causal_analysis.get_distribution_change_attribution(data_new=data_new)
+            _, interpretation = causal_analysis.get_distribution_change_attribution(data_new=data_new, bootstrap=True)
         elif root_cause_type == "feature_relevance":
-            node_contributions, noise_relevance, interpretation = causal_analysis.get_feature_relevance()
+            _, _, interpretation = causal_analysis.get_feature_relevance()
         else:
             raise ValueError("invalid root_cause_type")
 
-        return (
-            f"The root cause was correctly analysed, see the node-wise result :\n{node_contributions}\nInterpretation :\n{interpretation}"
-        )
+        return f"The root cause was correctly analysed, see the result :\n{interpretation}"
 
 
 class WhatIfAnswerer(CodedTool):
@@ -157,16 +159,23 @@ class WhatIfAnswerer(CodedTool):
         data_name: DATA_NAMES = sly_data["data_name"]
         logger.info(f"data_name from sly_data : {data_name}")
         what_if_question_type: WHAT_IF_QUESTION_TYPES = args.get("what_if_question_type")
-        logger.info(f"what_if_question_type from args : {what_if_question_type}")
         node: str = args.get("node")
-        logger.info(f"node from args : {node}")
+        intervention_str: str = args.get("intervention_str")
+        logger.info(f"from args : what_if_question_type={what_if_question_type}, node={node}, intervention_str={intervention_str}")
 
-        causal_analysis = CausalAnalysis.from_file(data_name)
+        causal_graph = CausalGraph(data_name)
+        causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
+
         if what_if_question_type == "intervention":
-            df = causal_analysis.generate_interventional_samples(node=node)
+            df = causal_analysis.generate_interventional_samples(node=node, intervention_str=intervention_str)
         elif what_if_question_type == "counterfactual":
-            df = causal_analysis.generate_counterfactual_samples(node=node)
+            data_path = select_target_path("openname")
+            logger.info(f"data_path selected : {data_path}")
+            data_new = pd.read_csv(data_path)
+            df = causal_analysis.generate_counterfactual_samples(node=node, intervention_str=intervention_str, observed_data=data_new)
         else:
             raise ValueError("invalid what_if_question_type")
 
-        return f"The what-if question was correctly answered, please see the answer in the form of a generated dataframe below :\n{df}"
+        download_data(df)
+
+        return "The what-if question was correctly answered, and the generated dataframe was downloaded and opened."

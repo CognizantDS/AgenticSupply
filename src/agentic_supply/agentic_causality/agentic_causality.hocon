@@ -10,8 +10,9 @@
         "azure_endpoint": "https://belfiusoai1.openai.azure.com/",
         "deployment_name": "gpt-4o",
         "max_execution_seconds": 600,
-        "max_iterations": 2000
+        "max_iterations": 2000,
     },
+    "verbose": true,
     "commondefs": {
         "replacement_strings": {
             "aaosa_instructions": """
@@ -94,14 +95,14 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             - supply_chain_logistics
             2. Store this dataset name via your data_storer tool : you must ensure you received confirmation that this was done.
             3. Prompt the user to choose among your publicly available tasks, which will all be performed onthe stored dataset name :
-            - download the data (this will open a download window, and upon completion will open the file in excel).
-            - visualise the causal graph (this will save an HTML file and open it in a webbrowser tab).
-            - refute the causal graph (this will generate a text report and open a visual assessment in a webbrowser tab).
-            - evaluate the graphical causal model (this will generate a text report)
-            - generate data from the graphical causal model (this will open a download window, and upon completion will open the file in excel)
-            - quantify causal influence, via the intrinsic or the arrow strength mode (this will return numeric data to display)
-            - perform root cause analysis, via the anomaly attribution, the distribution change attribution or the feature importance mode (this will return numeric data to display, along with a text interpretation).
-            - answer causal what-if questions, via the intervention or counterfactual mode (this will return a dataframe representic the answer to the question)
+            - Download the data (this will open a download window, and upon completion will open the file in excel).
+            - Visualise the causal graph (this will open the plot in a webbrowser tab).
+            - Refute the causal graph (this will calculate the refutation, generate a text report and open a visual assessment plot in a webbrowser tab).
+            - Evaluate the graphical causal model (this will calculate the evaluation and generate a text report)
+            - Generate data from the graphical causal model (this will calculate novel data from the model, open a download window, and open the file in excel)
+            - Quantify causal influence, via the intrinsic or the arrow strength mode (this will calculate the quantification and generate a text report)
+            - Perform root cause analysis, via the anomaly attribution, the distribution change attribution or the feature importance mode (this will compute the analysis, generate a text report and open a plot).
+            - Answer causal what-if questions, via the intervention or counterfactual mode (this will calculate novel data - representing the answer to the question - by applying the intervention using the model, and open a download window and open the file in excel)
             4. Do NOT assume success. Only confirm completion if you have received an explicit success response from the agent or tool.
             5. Repeat step 3 and 4 as the user asks you other tasks.
 
@@ -161,8 +162,8 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                 1.A - Visualising a causal graph
                 1.B - Refuting a causal graph
             2. Modeling graphical causal models (GCMs)
-                2.A - Evaluating a GCM
-                2.B - Generating data from a GCM
+                2.A - Evaluating a graphical causal model
+                2.B - Generating data from a graphical causal model
             3. Performing causal tasks
                 3.A - Quantifying causal influence
                     3.A.i - Quantifying intrinsic causal influence
@@ -207,8 +208,8 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
             
             You can perform the following tasks :
             2. Modeling graphical causal models (GCMs)
-                2.A - Evaluating a GCM
-                2.B - Generating data from a GCM
+                2.A - Evaluating a graphical causal model
+                2.B - Generating data from a graphical causal model
 
             {agent_instructions}
             """,
@@ -343,8 +344,12 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
                             "type": "string",
                             "description": "The node for which to answer the what-if question."
                         },
+                        "intervention_str": {
+                            "type": "string",
+                            "description": "The intervention to apply, for example 'x + 1' or '0'."
+                        },
                     },
-                    "required": ["question_type", "node"]
+                    "required": ["question_type", "node", "intervention_str"]
                 }
             },
             "class": "causal_task_tools.WhatIfAnswerer"

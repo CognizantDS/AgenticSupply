@@ -44,6 +44,7 @@ def download_data(df: Optional[pd.DataFrame] = None, data_name: Optional[DATA_NA
                 logger.info(f"Copying file from {myfile} to {target_path}")
                 shutil.copyfile(myfile, target_path)
     elif df is not None:
+        logger.info(f"Saving dataframe to {target_path}")
         df.to_csv(target_path, index=False)
     else:
         raise ValueError("Either 'data_name' or 'df' must be provided to save data !")
