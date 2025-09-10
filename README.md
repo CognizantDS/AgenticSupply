@@ -73,7 +73,56 @@ AGENT_MANIFEST_FILE ensures we load only the network(s) of this package for fast
 Any orders and shipments generated will be stored in ``neuro-san-studio/logs/order_db.json`` and ``neuro-san-studio/logs/shipment_db.json`` respectively.  
 
 ## Script
-### 1. Inventory and manufacturing (for a product) :
+### Agentic Causality
+#### 0. Choose data name
+Hi
+-> Prompts to select a dataset to use for the duration of the chat
+
+example_data
+-> Stores this as a string in sly_data, and prompts to choose a task
+
+#### 1. Causal Graph
+visualise the causal graph
+-> Opens the plot in a new webbrowser tab
+
+refute the causal graph
+-> Opens the plot in a new webbrowser tab, returns text interpretation (LONG !)
+
+#### 2. Causal Model
+evaluate the graphical causal model
+-> Returns text interpretation
+
+generate data from the graphical causal model (for X samples)
+-> Uses OS to save and open the dataframe
+
+#### 3. Causal Tasks
+##### Quantifying causal influence
+quantify causal influence via arrow strength
+-> Returns text interpretation
+
+quantify causal influence via the intrinsic mode
+-> Opens the plot in a new webbrowser tab, returns text interpretation
+
+##### Performing root cause analysis
+perform root cause analysis via the anomaly attribution mode
+-> Uses OS to prompt the user to select the anomalous dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation
+
+perform root cause analysis via the distribution change attribution mode
+-> X
+
+perform root cause analysis via the feature importance mode
+-> Returns text interpretation
+
+##### Answering causal what-if questions
+answer causal what-if questions via the intervention mode, with intervention x * 100 on node X
+-> Uses OS to save and open the dataframe
+
+answer causal what-if questions via the counterfactual mode, with intervention 0 on node Y 
+-> Uses OS to prompt the user to select the dataset from which to generate counterfactuals, Uses OS to save and open the dataframe
+
+
+### Agentic Logistics
+#### 1. Inventory and manufacturing (for a product) :
 Can you do an inventory check for the product PURAC_FCC across all our sites please ?  
 -> Returns data and prompts the user to continue ordering for Rayong Site  
   
@@ -86,7 +135,7 @@ It is to be manufactured at the Rayong Site, for 20 units, to Germany and by 20t
 (Please directly proceed and schedule the order.)  
 -> Returns order details  
 
-### 2. Logistics - Plan a shipment route
+#### 2. Logistics - Plan a shipment route
 I need to plan a shipment for a manufacturing order, please help me to plan the logistics by generating door-to-door routing options.  
 -> Prompts the user for the additional required details of manufacturing site and customer facility.  
   
@@ -96,7 +145,7 @@ From the manufacturing site "Rayong Site" to the customer facility "Henkel Facil
 (Yes I confirm, please proceed to shipment route planning.)  
 -> Returns 3 options and prompts the user to choose one.  
 
-### 3. Logistics - Place a shipment
+#### 3. Logistics - Place a shipment
 I need to place a shipment for a manufacturing order. What information do you need ?
 -> Prompts the user for additional required details of manufacturing order id, land route ids and ocean route ids.
 
@@ -107,7 +156,7 @@ NB : Choose an order id existing in order_db.json (or the one you generated duri
 (Yes, I confirm. Please proceed to the shipment placement directly.) 
 -> Returns shipment details  
 
-### 4. Disaster recovery
+#### 4. Disaster recovery
 Are there any issues impacting shipment delivery ?  
 -> Returns an issue for shipments going through Singapore. Prompts the user to reroute the shipment.  
   
