@@ -25,17 +25,12 @@ References :
     https://www.pywhy.org/dowhy/v0.13/example_notebooks/gcm_online_shop.html#Step-3:-Answer-causal-questions
 """
 
-from dowhy import gcm
-from dowhy.utils import bar_plot
+from dowhy import gcm  # this takes a while, but used everywhere
 import pandas as pd
 from typing import Tuple, Optional, Any, Dict
-from importlib.resources import open_binary
-import pickle
 import numpy as np
 import os
-import sympy as sp
-import dis
-from io import StringIO
+
 
 from agentic_supply.utilities.config import DATA_NAMES, DATA_TO_TARGET, ARTIFACTS_DIR
 from agentic_supply import data
@@ -55,7 +50,7 @@ class CausalAnalysis:
     Examples :
     >>> from agentic_supply.causality_assistant.causal_analysis import CausalAnalysis
     >>> from agentic_supply.causality_assistant.causal_graph import CausalGraph
-    >>> causal_graph = CausalGraph("example_data") # causal_graph = CausalGraph("online_shop_data")
+    >>> causal_graph = CausalGraph("example_data") # causal_graph = CausalGraph("online_shop_data") # causal_graph = CausalGraph("supply_chain_logistics")
     >>> causal_analysis = CausalAnalysis(causal_graph)
     >>> causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
     """
@@ -84,7 +79,7 @@ class CausalAnalysis:
     @staticmethod
     def _convert_to_percentage(value_dictionary: dict) -> Dict:
         total_absolute_sum = np.sum([abs(v) for v in value_dictionary.values()])
-        return {k: abs(v) / total_absolute_sum * 100 for k, v in value_dictionary.items()}
+        return {k: float(abs(v) / total_absolute_sum * 100) for k, v in value_dictionary.items()}
 
     @staticmethod
     def _str_to_lambda(expression_str: str) -> Any:
@@ -95,6 +90,10 @@ class CausalAnalysis:
         >>> lambda_fn = causal_analysis._str_to_lambda("x * 5") # proportional
         >>> lambda_fn = causal_analysis._str_to_lambda("5") # atomic
         """
+        import sympy as sp
+        import dis
+        from io import StringIO
+
         parsed_expr = sp.sympify(expression_str)
         lambda_fn = sp.lambdify(sp.symbols("x"), parsed_expr)
         with StringIO() as out:
@@ -243,6 +242,7 @@ class CausalAnalysis:
             ylabel="Variance attribution in %",
             title=f"Intrinsic causal influence plot for {self.data_name}",
         )
+        node_contributions = {k: float(v) for k, v in node_contributions.items()}
         node_contributions_pct = self._convert_to_percentage(node_contributions)
         most_impactful_node = self._get_most_impactful_node(node_contributions)
         interpretation = f"""Intrinsic causal influence scores : {node_contributions} (percentages : {node_contributions_pct}).
@@ -293,7 +293,9 @@ class CausalAnalysis:
         The node {most_impactful_node} has the highest likelihood of causing the anomaly seen in your given data."""
         return node_contributions, interpretation
 
-    def get_distribution_change_attribution(self, data_new: pd.DataFrame, bootstrap: bool = False) -> Tuple[Dict, str]:
+    def get_distribution_change_attribution(
+        self, data_new: pd.DataFrame, data_old: Optional[pd.DataFrame] = None, bootstrap: bool = False
+    ) -> Tuple[Dict, str]:
         """
         Question : What mechanism in my system changed between two sets of data ? Or in other words, which node in my data behaves differently ?
         Examples :
@@ -309,21 +311,23 @@ class CausalAnalysis:
             f"Calculating distribution change attribution from data_new with {len(data_new)} samples {'using the bootstrap method' if bootstrap else ''}"
         )
         confidence_intervals = None
+        if data_old is None:
+            data_old = self.data
         if bootstrap:
             node_contributions, confidence_intervals = gcm.confidence_intervals(
                 gcm.bootstrap_sampling(
                     gcm.distribution_change,
                     self.model,
-                    self.data,
+                    data_old,
                     data_new,
                     self.target,
-                    num_samples=500,
+                    num_samples=200,
                     # difference_estimation_func=lambda x1, x2: np.mean(x2) - np.mean(x1),
                 ),
                 num_bootstrap_resamples=5,
             )
         else:
-            node_contributions = gcm.distribution_change(self.model, self.data, data_new, self.target, num_samples=500)
+            node_contributions = gcm.distribution_change(self.model, self.data, data_new, self.target, num_samples=200)
         self._plot(
             basename="distribution_change_attribution",
             data=node_contributions,
@@ -350,12 +354,17 @@ class CausalAnalysis:
         return parent_relevance, noise_relevance, interpretation
 
     def _load_model_from_file(self) -> gcm.InvertibleStructuralCausalModel:
+        import pickle
+        from importlib.resources import open_binary
+
         model_filepath = f"{self.data_name}_model.pkl"
         logger.info(f"Loading model from {model_filepath}")
         with open_binary(data, model_filepath) as f:
             return pickle.load(f)
 
     def _plot(self, basename: str, data: Dict, ylabel: str, title: str, in_memory: bool = False, uncertainties: Optional[Dict] = None):
+        from dowhy.utils import bar_plot
+
         image_basename = f"{basename}_{self.data_name}"
         bar_plot(
             data,

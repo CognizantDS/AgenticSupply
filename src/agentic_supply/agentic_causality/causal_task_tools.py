@@ -105,8 +105,11 @@ class RootCauseAnalyser(CodedTool):
 
         causal_graph = CausalGraph(data_name)
         causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
-
-        if root_cause_type != "feature_relevance":
+        data_old = None
+        if data_name == "supply_chain_logistics" and root_cause_type == "distribution_attribution":
+            data_old = causal_analysis.data[causal_analysis.data.week == "w1"]
+            data_new = causal_analysis.data[causal_analysis.data.week == "w2"]
+        elif root_cause_type != "feature_relevance":
             data_path = select_target_path("openname")
             logger.info(f"data_path selected : {data_path}")
             data_new = pd.read_csv(data_path)
@@ -114,7 +117,7 @@ class RootCauseAnalyser(CodedTool):
         if root_cause_type == "anomaly_attributon":
             _, interpretation = causal_analysis.get_anomaly_attribution(anomalous_data=data_new, bootstrap=True)
         elif root_cause_type == "distribution_attribution":
-            _, interpretation = causal_analysis.get_distribution_change_attribution(data_new=data_new, bootstrap=True)
+            _, interpretation = causal_analysis.get_distribution_change_attribution(data_new=data_new, data_old=data_old, bootstrap=True)
         elif root_cause_type == "feature_relevance":
             _, _, interpretation = causal_analysis.get_feature_relevance()
         else:

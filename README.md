@@ -89,10 +89,10 @@ refute the causal graph
 -> Opens the plot in a new webbrowser tab, returns text interpretation (LONG !)
 
 #### 2. Causal Model
-evaluate the graphical causal model
+evaluate the graphical causal model (LONG !)  <PB: does not return interpretation to the chat>
 -> Returns text interpretation
 
-generate data from the graphical causal model (for X samples)
+generate data from the graphical causal model (for X samples)  
 -> Uses OS to save and open the dataframe
 
 #### 3. Causal Tasks
@@ -104,11 +104,11 @@ quantify causal influence via the intrinsic mode
 -> Opens the plot in a new webbrowser tab, returns text interpretation
 
 ##### Performing root cause analysis
-perform root cause analysis via the anomaly attribution mode
+perform root cause analysis via the anomaly attribution mode   <PB: interpretation is not formatted, only sometimes (prompt engineering ?)>
 -> Uses OS to prompt the user to select the anomalous dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation
 
-perform root cause analysis via the distribution change attribution mode
--> X
+perform root cause analysis via the distribution change attribution mode (LONG !)
+-> Uses OS to prompt the user to select the novel dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation
 
 perform root cause analysis via the feature importance mode
 -> Returns text interpretation
@@ -120,6 +120,21 @@ answer causal what-if questions via the intervention mode, with intervention x *
 answer causal what-if questions via the counterfactual mode, with intervention 0 on node Y 
 -> Uses OS to prompt the user to select the dataset from which to generate counterfactuals, Uses OS to save and open the dataframe
 
+### 4. Use cases
+#### Finding Root Causes of Changes in a Supply Chain
+Reproduce [reference notebook](https://www.pywhy.org/dowhy/v0.13/example_notebooks/gcm_supply_chain_dist_change.html) via the chat.  
+
+Hi
+-> Prompts to select a dataset to use for the duration of the chat
+
+supply_chain_logistics
+-> Stores this as a string in sly_data, and prompts to choose a task
+
+visualise the causal graph
+-> Opens the plot in a new webbrowser tab
+
+perform root cause analysis via the distribution change attribution mode (hardcoded to use week 1 and week 2 as comparison datasets)
+-> Uses OS to prompt the user to select the novel dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation
 
 ### Agentic Logistics
 #### 1. Inventory and manufacturing (for a product) :

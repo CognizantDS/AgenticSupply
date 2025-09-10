@@ -91,7 +91,7 @@ class CausalGraph:
         visualise_graph(image_basename, f"Causal Graph for {self.data_name}")
         return self
 
-    def refutate(self) -> "CausalGraph":
+    def refutate(self) -> str:
         """
         Examples :
         >>> causal_graph.refutate()
@@ -108,4 +108,4 @@ class CausalGraph:
         )
         visualise_graph(image_basename, f"Causal Graph refutation report for {self.data_name}", in_memory=False)
         self.refutation_report = f"Graph is falsifiable: {self.refutation.falsifiable}, Graph is falsified: {self.refutation.falsified}\n\n{repr(self.refutation)}"
-        return self
+        return self.refutation_report

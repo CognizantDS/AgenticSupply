@@ -9,9 +9,10 @@
         "openai_api_version": "2025-01-01-preview",# "2024-12-01-preview",
         "azure_endpoint": "https://belfiusoai1.openai.azure.com/",
         "deployment_name": "gpt-4o",
-        "max_execution_seconds": 600,
-        "max_iterations": 2000,
+        
     },
+    "max_execution_seconds": 600,
+    "max_iterations": 200,
     "verbose": true,
     "commondefs": {
         "replacement_strings": {
@@ -79,8 +80,8 @@ the inquiry, if any. or if it is being asked to respond to the inquiry.
 
                 # The description acts as an initial prompt.
                 "description": """
-                I am an agent network that can create causal graphs and enable downloading data from a range of datasets.
-                Choose your dataset of interest, and prompt me to create a causal graph or to download data and I will generate and share the graph or enable you to download the data.
+                I am an agent network that can visualise and refutate causal graphs, perform causal tasks, and enable downloading data from a range of datasets.
+                Choose your dataset of interest, and prompt me to execute a task.
                 """,
             },
 
