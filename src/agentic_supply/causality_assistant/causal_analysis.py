@@ -50,13 +50,14 @@ class CausalAnalysis:
     Examples :
     >>> from agentic_supply.causality_assistant.causal_analysis import CausalAnalysis
     >>> from agentic_supply.causality_assistant.causal_graph import CausalGraph
-    >>> causal_graph = CausalGraph("example_data") # causal_graph = CausalGraph("online_shop_data") # causal_graph = CausalGraph("supply_chain_logistics")
+    >>> data_name = "example_data" # "online_shop_data" "supply_chain_logistics"
+    >>> causal_graph = CausalGraph(data_name)
     >>> causal_analysis = CausalAnalysis(causal_graph)
     >>> causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
     """
 
     def __init__(self, causal_graph: CausalGraph, model_from_file: bool = False):
-        self.causal_grap: CausalGraph = causal_graph
+        self.causal_graph: CausalGraph = causal_graph
         self.data_name: DATA_NAMES = causal_graph.data_name
         self.target = DATA_TO_TARGET[self.data_name]
         self.data = get_data(self.data_name)
@@ -65,8 +66,8 @@ class CausalAnalysis:
         if model_from_file:
             self.model = self._load_model_from_file()
         else:
-            self.model = gcm.InvertibleStructuralCausalModel(self.causal_grap.graph)  # StructuralCausalModel
-        logger.info(f"Causal model instanciated for {self.data_name} with causal graph of form : {self.causal_grap.form}")
+            self.model = gcm.InvertibleStructuralCausalModel(self.causal_graph.graph)  # StructuralCausalModel
+        logger.info(f"Causal model instanciated for {self.data_name} with causal graph of form : {self.causal_graph.form}")
 
     def save_model(self):
         """
@@ -113,7 +114,7 @@ class CausalAnalysis:
         >>> causal_analysis.fit()
         >>> print(causal_analysis.fit_report)
         """
-        logger.info(f"Fitting the model for {self.data_name} with causal graph of form : {self.causal_grap.form}")
+        logger.info(f"Fitting the model for {self.data_name} with causal graph of form : {self.causal_graph.form}")
         summary_auto_assignment = gcm.auto.assign_causal_mechanisms(self.model, self.data)
         gcm.fit(self.model, self.data)
         self.fit_report = str(summary_auto_assignment)
@@ -125,7 +126,7 @@ class CausalAnalysis:
         >>> causal_analysis.evaluate()
         >>> print(causal_analysis.evaluation_report)
         """
-        logger.info(f"Evaluating the fitted model for {self.data_name} with causal graph of form : {self.causal_grap.form}")
+        logger.info(f"Evaluating the fitted model for {self.data_name} with causal graph of form : {self.causal_graph.form}")
         evaluation = gcm.evaluate_causal_model(self.model, self.data, evaluate_causal_structure=False)
         self.evaluation_report = str(evaluation)
         return self
@@ -281,6 +282,7 @@ class CausalAnalysis:
         else:
             node_contributions = gcm.attribute_anomalies(self.model, self.target, anomaly_samples=anomalous_data)
             node_contributions = {k: v[0] for k, v in node_contributions.items()}
+        node_contributions = {k: float(v) for k, v in node_contributions.items()}
         self._plot(
             basename="anomaly_attribution",
             data=node_contributions,
@@ -290,7 +292,9 @@ class CausalAnalysis:
         )
         most_impactful_node = self._get_most_impactful_node(node_contributions)
         interpretation = f"""Anomaly likelihood scores : {node_contributions}.
-        The node {most_impactful_node} has the highest likelihood of causing the anomaly seen in your given data."""
+        The node {most_impactful_node} has the highest likelihood of causing the anomaly seen in your given data.
+        A positive attribution score means that the corresponding node contributed to the observed anomaly, which is in our case the drop in Profit. 
+        A negative score of a node indicates that the observed value for the node is actually reducing the likelihood of the anomaly"""
         return node_contributions, interpretation
 
     def get_distribution_change_attribution(
@@ -321,13 +325,14 @@ class CausalAnalysis:
                     data_old,
                     data_new,
                     self.target,
-                    num_samples=200,
+                    num_samples=500,
                     # difference_estimation_func=lambda x1, x2: np.mean(x2) - np.mean(x1),
                 ),
                 num_bootstrap_resamples=5,
             )
         else:
-            node_contributions = gcm.distribution_change(self.model, self.data, data_new, self.target, num_samples=200)
+            node_contributions = gcm.distribution_change(self.model, self.data, data_new, self.target, num_samples=500)
+        node_contributions = {k: float(v) for k, v in node_contributions.items()}
         self._plot(
             basename="distribution_change_attribution",
             data=node_contributions,
@@ -337,7 +342,8 @@ class CausalAnalysis:
         )
         most_impactful_node = self._get_most_impactful_node(node_contributions)
         interpretation = f"""Distribution change likelihood scores : {node_contributions}
-        The node {most_impactful_node} has the highest likelihood of causing the distribution change seen in your given data."""
+        The node {most_impactful_node} has the highest likelihood of causing the distribution change seen in your given data.
+        A negative value indicates that a node contributes to a decrease and a positive value to an increase of the mean."""
         return node_contributions, interpretation
 
     def get_feature_relevance(self) -> Tuple[Dict, np.ndarray, str]:

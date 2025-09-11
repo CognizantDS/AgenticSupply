@@ -38,7 +38,7 @@ DATA_TO_TARGET: Dict[DATA_NAMES, List[Tuple]] = {
     "example_data": "Z",
     "online_shop_data": "Profit",
     "supply_chain_medical": "",
-    "supply_chain_logistics": "",
+    "supply_chain_logistics": "received",
 }
 CAUSAL_INFLUENCE_TYPES = Literal["intrinsic", "arrow"]
 ROOT_CAUSE_TYPES = Literal["anomaly_attributon", "distribution_attribution", "feature_relevance"]

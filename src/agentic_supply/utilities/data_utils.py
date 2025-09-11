@@ -57,7 +57,8 @@ def write_png_to_html(png_path: str, title: str, html_path: Optional[str] = None
 def visualise_graph(image_basename: str, title: str, in_memory: bool = True):
     image_filepath_png, image_filepath_html = (os.path.join(ARTIFACTS_DIR, image_basename + extension) for extension in [".png", ".html"])
     if in_memory:
-        plt.savefig(image_filepath_png)
+        plt.tight_layout()
+        plt.savefig(image_filepath_png, bbox_inches="tight")
     plt.clf()
     write_png_to_html(png_path=image_filepath_png, html_path=image_filepath_html, title=title)
     webbrowser.open_new_tab(f"file://{os.path.abspath(image_filepath_html)}")

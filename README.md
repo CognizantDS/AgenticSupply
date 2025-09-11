@@ -123,6 +123,7 @@ answer causal what-if questions via the counterfactual mode, with intervention 0
 ### 4. Use cases
 #### Finding Root Causes of Changes in a Supply Chain
 Reproduce [reference notebook](https://www.pywhy.org/dowhy/v0.13/example_notebooks/gcm_supply_chain_dist_change.html) via the chat.  
+Why did the average value of received quantity change week-over-week ?
 
 Hi
 -> Prompts to select a dataset to use for the duration of the chat
@@ -135,6 +136,12 @@ visualise the causal graph
 
 perform root cause analysis via the distribution change attribution mode (hardcoded to use week 1 and week 2 as comparison datasets)
 -> Uses OS to prompt the user to select the novel dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation
+
+#### Causal Attributions and Root-Cause Analysis in an Online Shop
+Reproduce [reference notebook](https://www.pywhy.org/dowhy/v0.13/example_notebooks/gcm_online_shop.html)  
+What are the key factors influencing the variance in profit ?
+What are the key factors explaining the Profit drop on a particular day ?
+What caused the profit drop in Q1 2022 ?
 
 ### Agentic Logistics
 #### 1. Inventory and manufacturing (for a product) :
