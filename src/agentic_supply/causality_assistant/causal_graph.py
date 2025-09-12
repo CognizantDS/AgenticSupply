@@ -76,6 +76,7 @@ DATA_TO_GRAPH_FORM: Dict[DATA_NAMES, List[Tuple]] = {
         ("Customer DB", "Product Service"),
         ("Order DB", "Order Service"),
     ],
+    "medical_case": [("Treatment", "Vision"), ("Condition", "Vision")],
 }
 
 
