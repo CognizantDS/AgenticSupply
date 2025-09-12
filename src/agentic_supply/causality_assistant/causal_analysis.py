@@ -27,7 +27,7 @@ References :
 
 from dowhy import gcm  # this takes a while, but used everywhere
 import pandas as pd
-from typing import Tuple, Optional, Any, Dict
+from typing import Tuple, Optional, Any, Dict, Union, List
 import numpy as np
 
 
@@ -48,7 +48,7 @@ class CausalAnalysis:
 
     Examples :
     >>> from agentic_supply.causality_assistant.causal_analysis import CausalAnalysis
-    >>> data_name = "mini_data" # "online_shop_data" "supply_chain_logistics"
+    >>> data_name = "mini_data" # "online_shop_data" "supply_chain_logistics" "microservices_latencies"
     >>> causal_analysis = CausalAnalysis(data_name, model_from_file=True)
     >>> causal_graph = CausalGraph(data_name)
     >>> causal_analysis = CausalAnalysis(data_name, causal_graph)
@@ -150,7 +150,8 @@ class CausalAnalysis:
         intervention_str: str = "X : x + 0.5",
         num_samples: int = 5,
         observed_data: Optional[pd.DataFrame] = None,
-    ) -> pd.DataFrame:
+        bootstrap_mean: bool = False,
+    ) -> Union[pd.DataFrame, Tuple[Dict, Dict]]:
         """
         Question : What will happen to the variable Z if I intervene on Y ? (= future)
         Either pass num_samples to draw from generated data, or pass observed data.
@@ -161,13 +162,44 @@ class CausalAnalysis:
         >>> data = causal_analysis.generate_interventional_samples(intervention_str="X : 5") # atomic intervention
         >>> data = causal_analysis.generate_interventional_samples(intervention_str="X : 5, Y : x * 2") # multiple intervention
         >>> data = causal_analysis.generate_interventional_samples(observed_data=causal_analysis.data, intervention_str="X : 0")
+
+        >>> import pandas as pd
+        >>> outlier_data = pd.read_csv("./src/agentic_supply/data/microservices_latencies_outlier_data.csv")
+        >>> median_mean, uncertainty_mean = causal_analysis.generate_interventional_samples(bootstrap_mean=True, intervention_str="Caching Service : x - 1, Shipping Cost Service : x + 2", observed_data=outlier_data)
         """
         if observed_data is not None:
             num_samples = None
-        logger.info(f"Generating {num_samples} interventional samples, with {intervention_str}")
-        return gcm.interventional_samples(
-            self.model, self._str_to_lambda(intervention_str), num_samples_to_draw=num_samples, observed_data=observed_data
+
+        if not bootstrap_mean:
+            logger.info(f"Generating {num_samples} interventional samples, with {intervention_str}")
+            data = gcm.interventional_samples(
+                self.model, self._str_to_lambda(intervention_str), num_samples_to_draw=num_samples, observed_data=observed_data
+            )
+            return data
+
+        logger.info(f"Generating Interventional samples mean for {self.data_name} with {intervention_str}")
+        median_mean, uncertainty_mean = gcm.confidence_intervals(
+            lambda: gcm.fit_and_compute(
+                gcm.interventional_samples,
+                self.model,
+                observed_data,
+                interventions=self._str_to_lambda(intervention_str),
+                observed_data=observed_data,
+            )()
+            .mean()
+            .to_dict(),
+            num_bootstrap_resamples=10,
         )
+        prior_mean = observed_data[self.target].mean()
+        self._plot(
+            basename="interventional_samples_mean",
+            data=dict(before=prior_mean, after=median_mean[self.target]),
+            uncertainties=dict(before=np.array([prior_mean, prior_mean]), after=uncertainty_mean[self.target]),
+            ylabel=f"Average {self.target}",
+            title=f"Interventional samples mean for {self.data_name} with {intervention_str}",
+            xticks=["Before", "After"],
+        )
+        return median_mean, uncertainty_mean
 
     def generate_counterfactual_samples(
         self,
@@ -370,9 +402,18 @@ class CausalAnalysis:
         with open_binary(data, model_filepath) as f:
             return pickle.load(f)
 
-    def _plot(self, basename: str, data: Dict, ylabel: str, title: str, in_memory: bool = True, uncertainties: Optional[Dict] = None):
+    def _plot(
+        self,
+        basename: str,
+        data: Dict,
+        ylabel: str,
+        title: str,
+        in_memory: bool = True,
+        uncertainties: Optional[Dict] = None,
+        xticks: Optional[List[str]] = None,
+    ):
         from dowhy.utils import bar_plot
 
         image_basename = f"{basename}_{self.data_name}"
-        bar_plot(data, uncertainties=uncertainties, ylabel=ylabel, display_plot=False)
+        bar_plot(data, uncertainties=uncertainties, ylabel=ylabel, xticks=xticks, display_plot=False)
         visualise_graph(image_basename, title, in_memory=in_memory)
