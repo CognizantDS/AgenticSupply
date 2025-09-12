@@ -29,10 +29,9 @@ from dowhy import gcm  # this takes a while, but used everywhere
 import pandas as pd
 from typing import Tuple, Optional, Any, Dict
 import numpy as np
-import os
 
 
-from agentic_supply.utilities.config import DATA_NAMES, DATA_TO_TARGET, ARTIFACTS_DIR
+from agentic_supply.utilities.config import DATA_NAMES, DATA_TO_TARGET
 from agentic_supply import data
 from agentic_supply.utilities.data_utils import get_data, save_object, visualise_graph
 from agentic_supply.causality_assistant.causal_graph import CausalGraph
@@ -49,16 +48,15 @@ class CausalAnalysis:
 
     Examples :
     >>> from agentic_supply.causality_assistant.causal_analysis import CausalAnalysis
-    >>> from agentic_supply.causality_assistant.causal_graph import CausalGraph
-    >>> data_name = "example_data" # "online_shop_data" "supply_chain_logistics"
+    >>> data_name = "mini_data" # "online_shop_data" "supply_chain_logistics"
+    >>> causal_analysis = CausalAnalysis(data_name, model_from_file=True)
     >>> causal_graph = CausalGraph(data_name)
-    >>> causal_analysis = CausalAnalysis(causal_graph)
-    >>> causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
+    >>> causal_analysis = CausalAnalysis(data_name, causal_graph)
     """
 
-    def __init__(self, causal_graph: CausalGraph, model_from_file: bool = False):
-        self.causal_graph: CausalGraph = causal_graph
-        self.data_name: DATA_NAMES = causal_graph.data_name
+    def __init__(self, data_name: DATA_NAMES, causal_graph: Optional[CausalGraph] = None, model_from_file: bool = False):
+        self.data_name: DATA_NAMES = data_name
+        self.causal_graph: CausalGraph = causal_graph if causal_graph is not None else CausalGraph(data_name)
         self.target = DATA_TO_TARGET[self.data_name]
         self.data = get_data(self.data_name)
         self.fit_report: Optional[str] = None
@@ -87,20 +85,26 @@ class CausalAnalysis:
         """
         This enables to have lambda expressions from a string input, for the user to give an intervention function as a string.
         Examples :
-        >>> lambda_fn = causal_analysis._str_to_lambda("x + 5") # shift
-        >>> lambda_fn = causal_analysis._str_to_lambda("x * 5") # proportional
-        >>> lambda_fn = causal_analysis._str_to_lambda("5") # atomic
+        >>> lambda_fn = causal_analysis._str_to_lambda("X : x + 5") # shift
+        >>> lambda_fn = causal_analysis._str_to_lambda("X : x * 5") # proportional
+        >>> lambda_fn = causal_analysis._str_to_lambda("X : 5") # atomic
+        >>> lambda_fn = causal_analysis._str_to_lambda("X : x + 1, Y : 0") # multiple
         """
         import sympy as sp
         import dis
         from io import StringIO
 
-        parsed_expr = sp.sympify(expression_str)
-        lambda_fn = sp.lambdify(sp.symbols("x"), parsed_expr)
-        with StringIO() as out:
-            dis.dis(lambda_fn, file=out)
-            logger.info(f"Parsed {expression_str} to :\n{out.getvalue()}")
-        return lambda_fn
+        expression_str_split = expression_str.split(",")
+        node_to_intervention_dict = {}
+        for expression in expression_str_split:
+            node, intervention_str = tuple([elem.strip() for elem in expression.split(":")])
+            intervention_parsed = sp.sympify(intervention_str)
+            lambda_fn = sp.lambdify(sp.symbols("x"), intervention_parsed)
+            node_to_intervention_dict[node] = lambda_fn
+            with StringIO() as out:
+                dis.dis(lambda_fn, file=out)
+                logger.info(f"Parsed {intervention_str} on {node} to {intervention_parsed}, see disassembling :\n{out.getvalue()}")
+        return node_to_intervention_dict
 
     @staticmethod
     def _get_most_impactful_node(impact: dict) -> str:
@@ -143,8 +147,7 @@ class CausalAnalysis:
 
     def generate_interventional_samples(
         self,
-        node: str,
-        intervention_str: str = "x + 0.5",
+        intervention_str: str = "X : x + 0.5",
         num_samples: int = 5,
         observed_data: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
@@ -152,24 +155,23 @@ class CausalAnalysis:
         Question : What will happen to the variable Z if I intervene on Y ? (= future)
         Either pass num_samples to draw from generated data, or pass observed data.
         Examples :
-        >>> data = causal_analysis.generate_interventional_samples("X", num_samples=10)
-        >>> data = causal_analysis.generate_interventional_samples("X", intervention_str="x * 0.5") # soft intervention
-        >>> data = causal_analysis.generate_interventional_samples("X", intervention_str="x + 5") # shift intervention
-        >>> data = causal_analysis.generate_interventional_samples("X", intervention_str="5") # atomic intervention
-        >>> data = causal_analysis.generate_interventional_samples("X", observed_data=causal_analysis.data)
-        >>> data = causal_analysis.generate_interventional_samples("X", observed_data=causal_analysis.data, intervention_str="5")
+        >>> data = causal_analysis.generate_interventional_samples(num_samples=10)
+        >>> data = causal_analysis.generate_interventional_samples(intervention_str="X : x * 0.5") # soft intervention
+        >>> data = causal_analysis.generate_interventional_samples(intervention_str="X : x + 5") # shift intervention
+        >>> data = causal_analysis.generate_interventional_samples(intervention_str="X : 5") # atomic intervention
+        >>> data = causal_analysis.generate_interventional_samples(intervention_str="X : 5, Y : x * 2") # multiple intervention
+        >>> data = causal_analysis.generate_interventional_samples(observed_data=causal_analysis.data, intervention_str="X : 0")
         """
         if observed_data is not None:
             num_samples = None
-        logger.info(f"Generating {num_samples} interventional samples, with {intervention_str} intervention on node {node}")
+        logger.info(f"Generating {num_samples} interventional samples, with {intervention_str}")
         return gcm.interventional_samples(
-            self.model, {node: self._str_to_lambda(intervention_str)}, num_samples_to_draw=num_samples, observed_data=observed_data
+            self.model, self._str_to_lambda(intervention_str), num_samples_to_draw=num_samples, observed_data=observed_data
         )
 
     def generate_counterfactual_samples(
         self,
-        node: str,
-        intervention_str: str = "x + 0.5",
+        intervention_str: str = "X : x + 0.5",
         observed_data: Optional[pd.DataFrame] = None,
         noise_data: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
@@ -178,24 +180,24 @@ class CausalAnalysis:
         what would have happened to the value of Z, had I intervened on X to assign it a different value x' ? (= alternative past)
         Either pass observed_data to generate counterfactuals from, or pass noise_data.
         Examples :
-        >>> data = causal_analysis.generate_counterfactual_samples("X", observed_data=causal_analysis.data.iloc[[0]], intervention_str="5")
+        >>> data = causal_analysis.generate_counterfactual_samples(observed_data=causal_analysis.data.iloc[[0]], intervention_str="X : 5")
         >>> causal_analysis.data.iloc[[0]].to_csv("./src/agentic_supply/data/counterfactual_example_data.csv", index=False)
         """
         num_samples = len(observed_data) if observed_data is not None else len(noise_data)
-        logger.info(f"Generating {num_samples} counterfactual samples, with '{intervention_str}' intervention on node {node}")
+        logger.info(f"Generating {num_samples} counterfactual samples, with '{intervention_str}'")
         return gcm.counterfactual_samples(
-            self.model, {node: self._str_to_lambda(intervention_str)}, observed_data=observed_data, noise_data=noise_data
+            self.model, self._str_to_lambda(intervention_str), observed_data=observed_data, noise_data=noise_data
         )
 
     ## Estimating causal effects
     def get_average_causal_effect(
-        self, interventions_alternative: Dict = {"X": "1"}, interventions_reference: Dict = {"X": "0"}
+        self, interventions_alternative: str = "X : 1", interventions_reference: str = "X : 0"
     ) -> Tuple[float, str]:
         """
         Question : How much does a certain target quantity differ under two different interventions/treatments ?
         Examples :
         >>> ace, interpretation = causal_analysis.get_average_causal_effect()
-        >>> ace, interpretation = causal_analysis.get_average_causal_effect(interventions_alternative = {"X": "0"}, interventions_reference = {"X": "1"})
+        >>> ace, interpretation = causal_analysis.get_average_causal_effect(interventions_alternative = "X : 0", interventions_reference = "X : 1")
         """
         logger.info(
             f"Calculating average causal effect from the difference between alternative '{interventions_alternative}' and reference '{interventions_reference}'"
@@ -203,8 +205,8 @@ class CausalAnalysis:
         ace = gcm.average_causal_effect(
             self.model,
             self.target,
-            interventions_alternative={k: self._str_to_lambda(v) for k, v in interventions_alternative.items()},
-            interventions_reference={k: self._str_to_lambda(v) for k, v in interventions_reference.items()},
+            interventions_alternative=self._str_to_lambda(interventions_alternative),
+            interventions_reference=self._str_to_lambda(interventions_reference),
             observed_data=self.data,
         )
         interpretation = f"""The target quantity of {self.target} differs on average by {ace} units,

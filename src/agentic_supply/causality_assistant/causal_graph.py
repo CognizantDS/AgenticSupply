@@ -22,6 +22,7 @@ logger = get_logger(__name__)
 
 
 DATA_TO_GRAPH_FORM: Dict[DATA_NAMES, List[Tuple]] = {
+    "mini_data": [("X", "Y"), ("Y", "Z")],
     "example_data": [("X", "Y"), ("Y", "Z")],
     "online_shop_data": [
         ("Page Views", "Sold Units"),
@@ -59,6 +60,21 @@ DATA_TO_GRAPH_FORM: Dict[DATA_NAMES, List[Tuple]] = {
         ("constraint", "submitted"),
         ("submitted", "confirmed"),
         ("confirmed", "received"),
+    ],
+    "microservices_latencies": [
+        ("www", "Website"),
+        ("Auth Service", "www"),
+        ("API", "www"),
+        ("Customer DB", "Auth Service"),
+        ("Customer DB", "API"),
+        ("Product Service", "API"),
+        ("Auth Service", "API"),
+        ("Order Service", "API"),
+        ("Shipping Cost Service", "Product Service"),
+        ("Caching Service", "Product Service"),
+        ("Product DB", "Caching Service"),
+        ("Customer DB", "Product Service"),
+        ("Order DB", "Order Service"),
     ],
 }
 

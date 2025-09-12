@@ -1,10 +1,8 @@
 from typing import Any, Dict
 from neuro_san.interfaces.coded_tool import CodedTool
-import os
 import pandas as pd
 
 from agentic_supply.causality_assistant.causal_analysis import CausalAnalysis
-from agentic_supply.causality_assistant.causal_graph import CausalGraph
 from agentic_supply.utilities.config import DATA_NAMES, CAUSAL_INFLUENCE_TYPES, ROOT_CAUSE_TYPES, WHAT_IF_QUESTION_TYPES
 from agentic_supply.data_assistant.data_downloading import select_target_path, download_data
 from agentic_supply.utilities.log_utils import set_logging, get_logger
@@ -52,8 +50,7 @@ class CausalInfluenceQuantificator(CodedTool):
         causal_influence_type: CAUSAL_INFLUENCE_TYPES = args.get("causal_influence_type")
         logger.info(f"causal_influence_type from args : {causal_influence_type}")
 
-        causal_graph = CausalGraph(data_name)
-        causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
+        causal_analysis = CausalAnalysis(data_name, model_from_file=True)
 
         if causal_influence_type == "arrow":
             _, _, interpretation = causal_analysis.get_arrow_strength()
@@ -103,8 +100,7 @@ class RootCauseAnalyser(CodedTool):
         root_cause_type: ROOT_CAUSE_TYPES = args.get("root_cause_type")
         logger.info(f"root_cause_type from args : {root_cause_type}")
 
-        causal_graph = CausalGraph(data_name)
-        causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
+        causal_analysis = CausalAnalysis(data_name, model_from_file=True)
         data_old = None
         if data_name == "supply_chain_logistics" and root_cause_type == "distribution_attribution":
             data_old = causal_analysis.data[causal_analysis.data.week == "w1"]
@@ -162,20 +158,18 @@ class WhatIfAnswerer(CodedTool):
         data_name: DATA_NAMES = sly_data["data_name"]
         logger.info(f"data_name from sly_data : {data_name}")
         what_if_question_type: WHAT_IF_QUESTION_TYPES = args.get("what_if_question_type")
-        node: str = args.get("node")
         intervention_str: str = args.get("intervention_str")
-        logger.info(f"from args : what_if_question_type={what_if_question_type}, node={node}, intervention_str={intervention_str}")
+        logger.info(f"from args : what_if_question_type={what_if_question_type}, intervention_str={intervention_str}")
 
-        causal_graph = CausalGraph(data_name)
-        causal_analysis = CausalAnalysis(causal_graph, model_from_file=True)
+        causal_analysis = CausalAnalysis(data_name, model_from_file=True)
 
         if what_if_question_type == "intervention":
-            df = causal_analysis.generate_interventional_samples(node=node, intervention_str=intervention_str)
+            df = causal_analysis.generate_interventional_samples(intervention_str=intervention_str)
         elif what_if_question_type == "counterfactual":
             data_path = select_target_path("openname")
             logger.info(f"data_path selected : {data_path}")
             data_new = pd.read_csv(data_path)
-            df = causal_analysis.generate_counterfactual_samples(node=node, intervention_str=intervention_str, observed_data=data_new)
+            df = causal_analysis.generate_counterfactual_samples(intervention_str=intervention_str, observed_data=data_new)
         else:
             raise ValueError("invalid what_if_question_type")
 

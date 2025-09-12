@@ -27,18 +27,22 @@ AZURE_AI_NAME_DEEPSEEK = os.getenv("AZURE_AI_NAME_DEEPSEEK")
 VANNA_API_KEY = os.getenv("VANNA_API_KEY")
 
 # constants
-DATA_NAMES = Literal["example_data", "supply_chain_medical", "supply_chain_logistics"]
+DATA_NAMES = Literal["mini_data", "example_data", "supply_chain_medical", "supply_chain_logistics", "microservices_latencies"]
 DATA_TO_FILE: Dict[DATA_NAMES, List[Tuple]] = {
+    "mini_data": "mini_data.csv",
     "example_data": "example_data.csv",
     "online_shop_data": "online_shop_data.csv",
     "supply_chain_medical": "SCMS_Delivery_History_Dataset.csv",
     "supply_chain_logistics": "supply_chain_week_over_week.csv",
+    "microservices_latencies": "microservices_latencies_data.csv",
 }
 DATA_TO_TARGET: Dict[DATA_NAMES, List[Tuple]] = {
+    "mini_data": "Z",
     "example_data": "Z",
     "online_shop_data": "Profit",
     "supply_chain_medical": "",
     "supply_chain_logistics": "received",
+    "microservices_latencies": "Website",
 }
 CAUSAL_INFLUENCE_TYPES = Literal["intrinsic", "arrow"]
 ROOT_CAUSE_TYPES = Literal["anomaly_attributon", "distribution_attribution", "feature_relevance"]

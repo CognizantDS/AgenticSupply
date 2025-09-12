@@ -75,73 +75,73 @@ Any orders and shipments generated will be stored in ``neuro-san-studio/logs/ord
 ## Script
 ### Agentic Causality
 #### 0. Choose data name
-Hi
--> Prompts to select a dataset to use for the duration of the chat
+Hi  
+-> Prompts to select a dataset to use for the duration of the chat  
 
-example_data
--> Stores this as a string in sly_data, and prompts to choose a task
+example_data  
+-> Stores this as a string in sly_data, and prompts to choose a task  
 
 #### 1. Causal Graph
-visualise the causal graph
--> Opens the plot in a new webbrowser tab
+visualise the causal graph  
+-> Opens the plot in a new webbrowser tab  
 
-refute the causal graph
--> Opens the plot in a new webbrowser tab, returns text interpretation (LONG !)
+refute the causal graph  
+-> Opens the plot in a new webbrowser tab, returns text interpretation (LONG !)  
 
 #### 2. Causal Model
-evaluate the graphical causal model (LONG !)  <PB: does not return interpretation to the chat>
--> Returns text interpretation
+evaluate the graphical causal model (LONG !) <PB: does not return interpretation to the chat>  
+-> Returns text interpretation  
 
 generate data from the graphical causal model (for X samples)  
--> Uses OS to save and open the dataframe
+-> Uses OS to save and open the dataframe  
 
 #### 3. Causal Tasks
 ##### Quantifying causal influence
-quantify causal influence via arrow strength
--> Returns text interpretation
+quantify causal influence via arrow strength  
+-> Returns text interpretation  
 
-quantify causal influence via the intrinsic mode
--> Opens the plot in a new webbrowser tab, returns text interpretation
+quantify causal influence via the intrinsic mode  
+-> Opens the plot in a new webbrowser tab, returns text interpretation  
 
 ##### Performing root cause analysis
-perform root cause analysis via the anomaly attribution mode   <PB: interpretation is not formatted, only sometimes (prompt engineering ?)>
--> Uses OS to prompt the user to select the anomalous dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation
+perform root cause analysis via the anomaly attribution mode  <PB: interpretation is not formatted, only sometimes (prompt engineering ?)>  
+-> Uses OS to prompt the user to select the anomalous dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation  
 
-perform root cause analysis via the distribution change attribution mode (LONG !)
--> Uses OS to prompt the user to select the novel dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation
+perform root cause analysis via the distribution change attribution mode (LONG !)  
+-> Uses OS to prompt the user to select the novel dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation  
 
-perform root cause analysis via the feature importance mode
--> Returns text interpretation
+perform root cause analysis via the feature importance mode  
+-> Returns text interpretation  
 
 ##### Answering causal what-if questions
-answer causal what-if questions via the intervention mode, with intervention x * 100 on node X
--> Uses OS to save and open the dataframe
+answer causal what-if questions via the intervention mode, with intervention X : x * 100  
+-> Uses OS to save and open the dataframe  
 
-answer causal what-if questions via the counterfactual mode, with intervention 0 on node Y 
--> Uses OS to prompt the user to select the dataset from which to generate counterfactuals, Uses OS to save and open the dataframe
+answer causal what-if questions via the counterfactual mode, with intervention Y : 0  
+-> Uses OS to prompt the user to select the dataset from which to generate counterfactuals, Uses OS to save and open the dataframe  
 
 ### 4. Use cases
 #### Finding Root Causes of Changes in a Supply Chain
 Reproduce [reference notebook](https://www.pywhy.org/dowhy/v0.13/example_notebooks/gcm_supply_chain_dist_change.html) via the chat.  
-Why did the average value of received quantity change week-over-week ?
+Why did the average value of received quantity change week-over-week ?  
 
-Hi
--> Prompts to select a dataset to use for the duration of the chat
+Hi  
+-> Prompts to select a dataset to use for the duration of the chat  
 
-supply_chain_logistics
--> Stores this as a string in sly_data, and prompts to choose a task
+supply_chain_logistics  
+-> Stores this as a string in sly_data, and prompts to choose a task  
 
-visualise the causal graph
--> Opens the plot in a new webbrowser tab
+visualise the causal graph  
+-> Opens the plot in a new webbrowser tab  
 
-perform root cause analysis via the distribution change attribution mode (hardcoded to use week 1 and week 2 as comparison datasets)
--> Uses OS to prompt the user to select the novel dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation
+perform root cause analysis via the distribution change attribution mode (hardcoded to use week 1 and week 2 as comparison datasets)  
+-> Uses OS to prompt the user to select the novel dataset csv file, opens the plot in a new webbrowser tab, returns text interpretation  
 
 #### Causal Attributions and Root-Cause Analysis in an Online Shop
 Reproduce [reference notebook](https://www.pywhy.org/dowhy/v0.13/example_notebooks/gcm_online_shop.html)  
-What are the key factors influencing the variance in profit ?
-What are the key factors explaining the Profit drop on a particular day ?
-What caused the profit drop in Q1 2022 ?
+What are the key factors influencing the variance in profit ?  
+What are the key factors explaining the Profit drop on a particular day ?  
+What caused the profit drop in Q1 2022 ?  
 
 ### Agentic Logistics
 #### 1. Inventory and manufacturing (for a product) :
