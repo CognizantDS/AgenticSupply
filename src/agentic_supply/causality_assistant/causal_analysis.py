@@ -368,15 +368,9 @@ class CausalAnalysis:
         with open_binary(data, model_filepath) as f:
             return pickle.load(f)
 
-    def _plot(self, basename: str, data: Dict, ylabel: str, title: str, in_memory: bool = False, uncertainties: Optional[Dict] = None):
+    def _plot(self, basename: str, data: Dict, ylabel: str, title: str, in_memory: bool = True, uncertainties: Optional[Dict] = None):
         from dowhy.utils import bar_plot
 
         image_basename = f"{basename}_{self.data_name}"
-        bar_plot(
-            data,
-            uncertainties=uncertainties,
-            ylabel=ylabel,
-            filename=os.path.join(ARTIFACTS_DIR, image_basename + ".png"),
-            display_plot=False,
-        )
+        bar_plot(data, uncertainties=uncertainties, ylabel=ylabel, display_plot=False)
         visualise_graph(image_basename, title, in_memory=in_memory)
